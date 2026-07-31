@@ -230,12 +230,10 @@ export function ChatScreen() {
               <Text variant="headlineSmall">Chat</Text>
               <Text variant="bodySmall" style={styles.muted}>
                 {usingMock
-                  ? aiService.isExpoGoRuntime()
-                    ? 'Expo Go mock runtime — use a native build with llama.rn for real inference'
-                    : 'Native runtime unavailable — rebuild with llama.rn linked'
-                  : `Local · ${modelLabel}`}
+                  ? 'Demo replies until a model is installed — download one from Models.'
+                  : `On this phone · ${modelLabel}`}
                 {stats
-                  ? ` · ${stats.total} msgs · ${Math.round(stats.chars / 1000)}k chars`
+                  ? ` · ${stats.total} msgs`
                   : ''}
               </Text>
             </View>
@@ -380,8 +378,14 @@ export function ChatScreen() {
             removeClippedSubviews
             ListEmptyComponent={
               <EmptyState
-                title="Private on-device chat"
-                description="Messages stay on this device. Copy, share, export, or open any reply in Workspace."
+                title="Ask anything privately"
+                description="Messages stay on this phone. Try: “Summarize this idea in 3 bullets” or “Explain photosynthesis simply”."
+                actionLabel={readyModels.length ? undefined : 'Download a model'}
+                onAction={
+                  readyModels.length
+                    ? undefined
+                    : () => navigation.navigate('MarketplaceTab')
+                }
               />
             }
             renderItem={({ item }) => (

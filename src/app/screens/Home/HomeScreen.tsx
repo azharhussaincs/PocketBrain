@@ -63,6 +63,34 @@ export function HomeScreen({ navigation }: Props) {
         </Text>
       </View>
 
+      {installed.length === 0 ? (
+        <View
+          style={[
+            styles.hero,
+            {
+              backgroundColor: theme.colors.primaryContainer,
+              borderColor: theme.colors.primary,
+            },
+          ]}
+        >
+          <Text variant="titleMedium">Start in 2 steps</Text>
+          <Text variant="bodyMedium" style={styles.heroBody}>
+            1) Download a small model · 2) Open Chat and ask anything. Works offline after download.
+          </Text>
+          <Button
+            mode="contained"
+            icon="download"
+            onPress={() => navigation.getParent()?.navigate('MarketplaceTab')}
+            style={styles.heroBtn}
+          >
+            Install your first model
+          </Button>
+          <Button mode="text" onPress={() => navigation.getParent()?.navigate('ChatTab')}>
+            Go to Chat
+          </Button>
+        </View>
+      ) : null}
+
       <FlatList
         {...LIST_PERF}
         data={tasks}
@@ -109,17 +137,26 @@ export function HomeScreen({ navigation }: Props) {
       />
 
       <View style={styles.footerActions}>
+        {installed.length > 0 ? (
+          <Button
+            mode="contained"
+            onPress={() => navigation.getParent()?.navigate('ChatTab')}
+          >
+            Open Chat
+          </Button>
+        ) : (
+          <Button
+            mode="contained"
+            onPress={() => navigation.getParent()?.navigate('MarketplaceTab')}
+          >
+            Browse models
+          </Button>
+        )}
         <Button mode="outlined" onPress={() => navigation.navigate('Files')}>
           Files
         </Button>
         <Button mode="outlined" onPress={() => navigation.navigate('Storage')}>
           Storage
-        </Button>
-        <Button
-          mode="contained"
-          onPress={() => navigation.getParent()?.navigate('MarketplaceTab')}
-        >
-          Browse models
         </Button>
       </View>
     </View>
@@ -132,6 +169,14 @@ const styles = StyleSheet.create({
   search: { marginBottom: 10 },
   stats: { marginBottom: 8 },
   muted: { opacity: 0.7 },
+  hero: {
+    borderWidth: 1,
+    borderRadius: 16,
+    padding: 14,
+    marginBottom: 12,
+  },
+  heroBody: { marginTop: 6, marginBottom: 10, opacity: 0.9 },
+  heroBtn: { marginBottom: 4 },
   list: { paddingBottom: 100 },
   card: {
     borderWidth: StyleSheet.hairlineWidth,
@@ -149,5 +194,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 8,
     justifyContent: 'flex-end',
+    flexWrap: 'wrap',
   },
 });

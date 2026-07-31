@@ -10,7 +10,18 @@ interface Props {
   primaryLabel?: string;
   showTechnical?: boolean;
   busy?: boolean;
+  /** Compact card for first-time install surfaces */
+  simple?: boolean;
 }
+
+const PRIMARY_BADGES = new Set([
+  'Small',
+  'Medium',
+  'Large',
+  'Beginner Friendly',
+  'Recommended',
+  'Fast',
+]);
 
 export function FriendlyModelCard({
   model,
@@ -19,9 +30,14 @@ export function FriendlyModelCard({
   primaryLabel,
   showTechnical,
   busy,
+  simple = true,
 }: Props) {
   const theme = useTheme();
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(Boolean(showTechnical));
+
+  const badges = simple
+    ? model.badges.filter((b) => PRIMARY_BADGES.has(b)).slice(0, 3)
+    : model.badges;
 
   return (
     <Pressable
@@ -37,29 +53,33 @@ export function FriendlyModelCard({
       ]}
     >
       <Text variant="titleMedium">{model.friendlyName}</Text>
-      <Text variant="bodyMedium" style={styles.purpose}>
+      <Text variant="bodyMedium" style={styles.purpose} numberOfLines={2}>
         {model.purpose}
       </Text>
 
-      <View style={styles.badges}>
-        {model.badges.map((badge) => (
-          <Chip key={badge} compact style={styles.badge}>
-            {badge}
-          </Chip>
-        ))}
-      </View>
+      {badges.length ? (
+        <View style={styles.badges}>
+          {badges.map((badge) => (
+            <Chip key={badge} compact style={styles.badge}>
+              {badge}
+            </Chip>
+          ))}
+        </View>
+      ) : null}
 
       <View style={styles.metaRow}>
-        <Meta label="Size" value={model.downloadSizeLabel} />
-        <Meta label="RAM" value={model.ramLabel} />
+        <Meta label="Download" value={model.downloadSizeLabel} />
+        <Meta label="RAM need" value={model.ramLabel} />
         <Meta label="Speed" value={model.speed} />
-        <Meta label="Quality" value={model.quality} />
       </View>
-      <View style={styles.metaRow}>
-        <Meta label="Battery" value={model.batteryImpact} />
-        <Meta label="Offline" value={model.offline ? 'Yes' : 'No'} />
-        <Meta label="Storage" value={model.storageImpact} />
-      </View>
+
+      {(expanded || !simple) && (
+        <View style={styles.metaRow}>
+          <Meta label="Quality" value={model.quality} />
+          <Meta label="Battery" value={model.batteryImpact} />
+          <Meta label="Offline" value={model.offline ? 'Yes' : 'No'} />
+        </View>
+      )}
 
       <View style={styles.actions}>
         {onPrimary ? (
@@ -68,11 +88,11 @@ export function FriendlyModelCard({
           </Button>
         ) : null}
         <Button compact mode="text" onPress={() => setExpanded((v) => !v)}>
-          {expanded || showTechnical ? 'Hide details' : 'Technical details'}
+          {expanded ? 'Less' : 'More info'}
         </Button>
       </View>
 
-      {(expanded || showTechnical) && (
+      {expanded && (
         <View style={styles.tech}>
           <Text variant="bodySmall">Name: {model.technicalName}</Text>
           <Text variant="bodySmall">Author: {model.author}</Text>

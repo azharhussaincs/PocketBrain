@@ -32,6 +32,27 @@ export function SettingsScreen({ navigation }: Props) {
         Privacy-first defaults. Analytics and crash reporting stay off unless you opt in.
       </Text>
 
+      <Section title="More tools">
+        <List.Item
+          title="Workspace"
+          description="Documents and templates"
+          onPress={() => navigation.getParent()?.navigate('WorkspaceTab')}
+          left={(props) => <List.Icon {...props} icon="briefcase-outline" />}
+        />
+        <List.Item
+          title="Playground"
+          description="Try AI modes and tools"
+          onPress={() => navigation.getParent()?.navigate('PlaygroundTab')}
+          left={(props) => <List.Icon {...props} icon="flask-outline" />}
+        />
+        <List.Item
+          title="Downloads"
+          description="Pause, resume, or cancel model downloads"
+          onPress={() => navigation.getParent()?.navigate('DownloadsTab')}
+          left={(props) => <List.Icon {...props} icon="download-outline" />}
+        />
+      </Section>
+
       <Section title="Appearance & accessibility">
         <List.Item
           title="Theme"

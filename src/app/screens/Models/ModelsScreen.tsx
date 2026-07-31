@@ -74,6 +74,14 @@ export function ModelsScreen() {
       <Text variant="bodyMedium" style={styles.subtitle}>
         Storage used: {formatBytes(total)} · You own these files
       </Text>
+      <View style={styles.toolbar}>
+        <Button mode="contained-tonal" onPress={() => navigation.navigate('MarketplaceTab')}>
+          Get models
+        </Button>
+        <Button mode="outlined" onPress={() => navigation.navigate('DownloadsTab')}>
+          Downloads
+        </Button>
+      </View>
       {updates.length ? (
         <Text variant="bodySmall" style={styles.subtitle}>
           {updates.length} catalog model(s) available to reinstall/update. Update verifies the
@@ -239,6 +247,7 @@ export function ModelsScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 16 },
   subtitle: { opacity: 0.7, marginBottom: 12 },
+  toolbar: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12 },
   list: { paddingBottom: 32 },
   empty: { marginTop: 48, textAlign: 'center', opacity: 0.7 },
   meta: { opacity: 0.7, marginTop: 2, marginBottom: 2 },

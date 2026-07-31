@@ -231,22 +231,7 @@ export function RootNavigator() {
       <Tab.Screen
         name="MarketplaceTab"
         component={MarketplaceStackNavigator}
-        options={{ title: 'Market', tabBarAccessibilityLabel: 'Marketplace tab' }}
-      />
-      <Tab.Screen
-        name="WorkspaceTab"
-        component={WorkspaceStackNavigator}
-        options={{ title: 'Workspace', tabBarAccessibilityLabel: 'Workspace tab' }}
-      />
-      <Tab.Screen
-        name="ModelsTab"
-        component={ModelsScreen}
-        options={{ title: 'Models', tabBarAccessibilityLabel: 'Models tab' }}
-      />
-      <Tab.Screen
-        name="DownloadsTab"
-        component={DownloadsScreen}
-        options={{ title: 'Downloads', tabBarAccessibilityLabel: 'Downloads tab' }}
+        options={{ title: 'Get', tabBarAccessibilityLabel: 'Download models tab' }}
       />
       <Tab.Screen
         name="ChatTab"
@@ -254,14 +239,42 @@ export function RootNavigator() {
         options={{ title: 'Chat', tabBarAccessibilityLabel: 'Chat tab' }}
       />
       <Tab.Screen
-        name="PlaygroundTab"
-        component={PlaygroundScreen}
-        options={{ title: 'Play', tabBarAccessibilityLabel: 'Playground tab' }}
+        name="ModelsTab"
+        component={ModelsScreen}
+        options={{ title: 'Mine', tabBarAccessibilityLabel: 'Installed models tab' }}
       />
       <Tab.Screen
         name="SettingsTab"
         component={SettingsStackNavigator}
         options={{ title: 'Settings', tabBarAccessibilityLabel: 'Settings tab' }}
+      />
+      {/* Kept for deep links; hidden from tab bar to reduce clutter */}
+      <Tab.Screen
+        name="WorkspaceTab"
+        component={WorkspaceStackNavigator}
+        options={{
+          title: 'Workspace',
+          tabBarButton: () => null,
+          tabBarItemStyle: { display: 'none' },
+        }}
+      />
+      <Tab.Screen
+        name="DownloadsTab"
+        component={DownloadsScreen}
+        options={{
+          title: 'Downloads',
+          tabBarButton: () => null,
+          tabBarItemStyle: { display: 'none' },
+        }}
+      />
+      <Tab.Screen
+        name="PlaygroundTab"
+        component={PlaygroundScreen}
+        options={{
+          title: 'Play',
+          tabBarButton: () => null,
+          tabBarItemStyle: { display: 'none' },
+        }}
       />
     </Tab.Navigator>
   );

@@ -92,14 +92,14 @@ export function ModelRequiredGate({
         {gate.message}
       </Text>
       <Text variant="titleMedium" style={styles.section}>
-        Recommended
+        Easiest to start
       </Text>
       {!gate.recommendations.length ? (
         <Text style={styles.hint}>
-          No catalog models for this capability yet. Browse Marketplace or pick another task.
+          No catalog models for this feature yet. Open Models to browse everything.
         </Text>
       ) : (
-        gate.recommendations.map((card) => (
+        gate.recommendations.slice(0, 2).map((card) => (
           <View key={`${card.tier}-${card.id}`}>
             <Text variant="labelLarge" style={styles.tier}>
               {TIER_LABEL[card.tier]}
@@ -108,12 +108,13 @@ export function ModelRequiredGate({
               model={card}
               busy={busyId === card.id}
               primaryLabel="Install"
+              simple
               onPrimary={() => void download(card.id)}
             />
           </View>
         ))
       )}
-      <Button mode="outlined" onPress={() => setTick((t) => t + 1)}>
+      <Button mode="contained" onPress={() => setTick((t) => t + 1)} style={styles.refresh}>
         Refresh
       </Button>
     </View>
@@ -126,4 +127,5 @@ const styles = StyleSheet.create({
   section: { marginBottom: 8 },
   tier: { marginBottom: 4, opacity: 0.8 },
   hint: { opacity: 0.7, marginBottom: 16 },
+  refresh: { marginTop: 8 },
 });
