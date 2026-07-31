@@ -44,7 +44,8 @@ export function HomeScreen({ navigation }: Props) {
   }, [showAllTasks, installed.length]);
 
   const goGet = () => navigation.getParent()?.navigate('MarketplaceTab');
-  const goChat = () => navigation.getParent()?.navigate('ChatTab');
+  const goChat = () =>
+    navigation.getParent()?.navigate('ChatTab', { newChat: true });
 
   const header = (
     <View>

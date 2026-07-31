@@ -54,7 +54,7 @@ export function TaskDetailScreen({ route, navigation }: Props) {
       return;
     }
     if (task.id === 'chat') {
-      parent?.navigate('ChatTab');
+      parent?.navigate('ChatTab', { newChat: true });
       return;
     }
     if (task.workspaceType) {
@@ -68,7 +68,7 @@ export function TaskDetailScreen({ route, navigation }: Props) {
       parent?.navigate('PlaygroundTab');
       return;
     }
-    parent?.navigate('ChatTab');
+    parent?.navigate('ChatTab', { newChat: true });
   };
 
   const download = async (modelId: string) => {

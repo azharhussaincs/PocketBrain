@@ -27,7 +27,7 @@
       "package": "com.pocketbrain.app",
       "versionCode": 18,
       "allowBackup": false,
-      "softwareKeyboardLayoutMode": "resize",
+      "softwareKeyboardLayoutMode": "pan",
       "adaptiveIcon": {
         "backgroundColor": "#FFFFFF",
         "foregroundImage": "./assets/android-icon-foreground.png",

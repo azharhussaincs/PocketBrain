@@ -1,8 +1,8 @@
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Alert,
   FlatList,
-  KeyboardAvoidingView,
+  Keyboard,
   Platform,
   StyleSheet,
   View,
@@ -11,8 +11,9 @@ import {
   ActivityIndicator,
   Button,
   Dialog,
+  Divider,
   IconButton,
-  Menu,
+  List,
   Portal,
   Searchbar,
   Text,
@@ -20,8 +21,8 @@ import {
   useTheme,
 } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
-import type { NavigationProp } from '@react-navigation/native';
+import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
+import type { NavigationProp, RouteProp } from '@react-navigation/native';
 import { useAppStore } from '../../../store/appStore';
 import { useChatStore } from '../../../store/chatStore';
 import { useSettingsStore } from '../../../store/settingsStore';
@@ -32,7 +33,6 @@ import { ModelRequiredGate } from '../../../components/ModelRequiredGate';
 import { ResponseActions } from '../../../components/ResponseActions';
 import { UniversalComposer } from '../../../components/UniversalComposer';
 import { MarkdownText } from '../../../components/MarkdownText';
-import { EmptyState } from '../../../components/EmptyState';
 import { generatedContentStore } from '../../../files/GeneratedContentStore';
 import type { ChatAttachment } from '../../../types/attachments';
 import type { RootTabParamList } from '../../navigation/types';
@@ -40,6 +40,7 @@ import { formatBytes } from '../../../utils/format';
 
 export function ChatScreen() {
   const navigation = useNavigation<NavigationProp<RootTabParamList>>();
+  const route = useRoute<RouteProp<RootTabParamList, 'ChatTab'>>();
   const insets = useSafeAreaInsets();
   const theme = useTheme();
   const installed = useAppStore((s) => s.installed);
@@ -50,6 +51,7 @@ export function ChatScreen() {
   const folders = useChatStore((s) => s.folders);
   const activeId = useChatStore((s) => s.activeConversationId);
   const createConversation = useChatStore((s) => s.createConversation);
+  const startNewChat = useChatStore((s) => s.startNewChat);
   const setActive = useChatStore((s) => s.setActive);
   const setConversationModel = useChatStore((s) => s.setConversationModel);
   const renameConversation = useChatStore((s) => s.renameConversation);
@@ -75,17 +77,70 @@ export function ChatScreen() {
   const [renameValue, setRenameValue] = useState('');
   const [threadSearch, setThreadSearch] = useState('');
   const [showSearch, setShowSearch] = useState(false);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
   const abortRef = useRef<AbortController | null>(null);
   const sendingLock = useRef(false);
   const listRef = useRef<FlatList>(null);
+
+  useEffect(() => {
+    // Android 15+/API 36 edge-to-edge often ignores adjustResize — lift composer manually.
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+    const onShow = Keyboard.addListener(showEvent, (e) => {
+      setKeyboardHeight(e.endCoordinates.height);
+    });
+    const onHide = Keyboard.addListener(hideEvent, () => setKeyboardHeight(0));
+    return () => {
+      onShow.remove();
+      onHide.remove();
+    };
+  }, []);
 
   const readyModels = useMemo(
     () => installed.filter((m) => m.status === 'installed'),
     [installed],
   );
 
+  // Home / task “Chat” opens a blank thread (like ChatGPT New chat).
+  useFocusEffect(
+    React.useCallback(() => {
+      if (!route.params?.newChat) return;
+      const modelId =
+        chatOrchestrator.resolveInstalledModelId(
+          useChatStore.getState().conversations.find(
+            (c) => c.id === useChatStore.getState().activeConversationId,
+          )?.modelId,
+        ) ??
+        readyModels[0]?.listingId;
+      startNewChat(modelId);
+      setDraft('');
+      setAttachments([]);
+      setShowSearch(false);
+      setThreadSearch('');
+      navigation.setParams({ newChat: false });
+    }, [route.params?.newChat, readyModels, startNewChat, navigation]),
+  );
+
   const active = conversations.find((c) => c.id === activeId) ?? null;
-  const selectedModelId = active?.modelId ?? readyModels[0]?.listingId ?? '';
+
+  // If the conversation's model was deleted, fall back to another installed model.
+  const selectedModelId = useMemo(() => {
+    const preferred = active?.modelId;
+    if (preferred && readyModels.some((m) => m.listingId === preferred)) {
+      return preferred;
+    }
+    return readyModels[0]?.listingId ?? '';
+  }, [active?.modelId, readyModels]);
+
+  useEffect(() => {
+    if (!active || !selectedModelId) return;
+    if (active.modelId === selectedModelId) return;
+    setConversationModel(active.id, selectedModelId);
+    setStatusLabel(`Switched to ${readyModels.find((m) => m.listingId === selectedModelId)?.localName ?? 'another model'}`);
+    const t = setTimeout(() => setStatusLabel(undefined), 2500);
+    return () => clearTimeout(t);
+  }, [active, selectedModelId, readyModels, setConversationModel]);
+
   const usingMock = aiService.isUsingMockRuntime() || !readyModels.length;
   const modelLabel =
     readyModels.find((m) => m.listingId === selectedModelId)?.localName ??
@@ -114,7 +169,13 @@ export function ChatScreen() {
     return createConversation(modelId);
   };
 
-  const goGet = () => navigation.navigate('MarketplaceTab');
+  const goGet = (
+    collection?: import('../../../discover/recommendations').MarketplaceCollectionId,
+  ) =>
+    navigation.navigate('MarketplaceTab', {
+      screen: 'MarketplaceHome',
+      params: collection ? { collection } : undefined,
+    });
 
   const runGeneration = async (
     conversationId: string,
@@ -166,12 +227,26 @@ export function ChatScreen() {
         },
       });
 
+      if (result.switchedToModelId) {
+        setConversationModel(conversationId, result.switchedToModelId);
+      }
+
       const finalText = (assembled || result.text || '').trim();
       updateMessage(conversationId, assistantId, {
         content: finalText || 'No response generated.',
         streaming: false,
         workspaceDocumentId: result.workspaceDocumentId,
       });
+
+      if (result.needsModel) {
+        Alert.alert('Model needed', result.needsModel.message, [
+          { text: 'Later', style: 'cancel' },
+          {
+            text: 'Download models',
+            onPress: () => goGet(result.needsModel!.collection),
+          },
+        ]);
+      }
 
       if (result.workspaceDocumentId) {
         Alert.alert('Document created', 'Open it in Workspace to preview, export, and share.', [
@@ -195,7 +270,7 @@ export function ChatScreen() {
       });
       Alert.alert('Generation failed', message, [
         { text: 'OK' },
-        { text: 'Get models', onPress: goGet },
+        { text: 'Get models', onPress: () => goGet() },
       ]);
     } finally {
       setSending(false);
@@ -216,11 +291,17 @@ export function ChatScreen() {
       selectedModelId || undefined,
     );
     if (blocked) {
-      chatOrchestrator.explainBlocked(blocked, goGet);
+      chatOrchestrator.explainBlocked(blocked, () => goGet());
       return;
     }
 
-    const conversationId = ensureConversation(selectedModelId);
+    const modelId =
+      chatOrchestrator.resolveInstalledModelId(selectedModelId) ?? selectedModelId;
+    if (active && modelId && modelId !== active.modelId) {
+      setConversationModel(active.id, modelId);
+    }
+
+    const conversationId = ensureConversation(modelId);
     const userLabel =
       content ||
       (pendingAttachments.length
@@ -235,7 +316,7 @@ export function ChatScreen() {
       attachments: pendingAttachments,
     });
     requestAnimationFrame(() => listRef.current?.scrollToEnd({ animated: true }));
-    await runGeneration(conversationId, content, selectedModelId, pendingAttachments);
+    await runGeneration(conversationId, content, modelId, pendingAttachments);
   };
 
   const regenerate = async (assistantMessageId: string) => {
@@ -268,7 +349,7 @@ export function ChatScreen() {
       if (!selectedModelId) {
         chatOrchestrator.explainBlocked(
           'No text model is installed. Download a Text model from Get to continue.',
-          goGet,
+          () => goGet(),
         );
       }
       return;
@@ -310,148 +391,36 @@ export function ChatScreen() {
     Alert.alert('Exported', 'Chat saved to Files → Chat Exports.');
   };
 
-  const composerPad = Math.max(insets.bottom > 0 ? 4 : 8, 8);
+  const composerPad = keyboardHeight > 0 ? 8 : Math.max(insets.bottom > 0 ? 4 : 8, 8);
+  const composerLift = keyboardHeight; // sits above keyboard; tab bar hides while keyboard is open
 
   return (
     <ModelRequiredGate capability="chat" title="Chat needs a text model">
-      <KeyboardAvoidingView
-        style={[styles.flex, { backgroundColor: theme.colors.background }]}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={0}
-      >
-        <View style={styles.flex}>
-          <View style={[styles.container, styles.messagesPane]}>
-            <View style={styles.header}>
-              <View style={styles.headerText}>
-                <Text variant="headlineSmall">Chat</Text>
-                <Text variant="bodySmall" style={styles.muted} numberOfLines={2}>
-                  {usingMock
-                    ? 'Demo replies until a model is installed — download one from Get.'
-                    : `On this phone · ${modelLabel}`}
-                  {stats ? ` · ${stats.total} msgs` : ''}
-                </Text>
-              </View>
-              <Menu
-                visible={modelMenu}
-                onDismiss={() => setModelMenu(false)}
-                anchor={
-                  <IconButton
-                    icon="package-variant"
-                    onPress={() => setModelMenu(true)}
-                    accessibilityLabel="Switch model"
-                  />
-                }
-              >
-                {readyModels.map((m) => (
-                  <Menu.Item
-                    key={m.listingId}
-                    onPress={() => {
-                      setModelMenu(false);
-                      if (active) setConversationModel(active.id, m.listingId);
-                      else createConversation(m.listingId);
-                    }}
-                    title={m.localName}
-                  />
-                ))}
-              </Menu>
-              <Menu
-                visible={menuOpen}
-                onDismiss={() => setMenuOpen(false)}
-                anchor={
-                  <IconButton
-                    icon="dots-vertical"
-                    onPress={() => setMenuOpen(true)}
-                    accessibilityLabel="Chat options"
-                  />
-                }
-              >
-                <Menu.Item
-                  onPress={() => {
-                    setMenuOpen(false);
-                    createConversation(selectedModelId);
-                  }}
-                  title="New chat"
-                />
-                <Menu.Item
-                  onPress={() => {
-                    setMenuOpen(false);
-                    setShowSearch((v) => !v);
-                  }}
-                  title="Search in chat"
-                />
-                {active ? (
-                  <>
-                    <Menu.Item
-                      onPress={() => {
-                        setMenuOpen(false);
-                        setRenameValue(active.title);
-                        setRenameOpen(true);
-                      }}
-                      title="Rename conversation"
-                    />
-                    <Menu.Item
-                      onPress={() => {
-                        setMenuOpen(false);
-                        togglePin(active.id);
-                      }}
-                      title={active.pinned ? 'Unpin' : 'Pin'}
-                    />
-                    <Menu.Item
-                      onPress={() => {
-                        setMenuOpen(false);
-                        toggleFavorite(active.id);
-                      }}
-                      title={active.favorite ? 'Unfavorite' : 'Favorite'}
-                    />
-                    <Menu.Item
-                      onPress={() => {
-                        setMenuOpen(false);
-                        const name = `Folder ${folders.length + 1}`;
-                        const folderId = createFolder(name);
-                        moveToFolder(active.id, folderId);
-                        Alert.alert('Moved', `Chat moved to ${name}.`);
-                      }}
-                      title="Move to new folder"
-                    />
-                    <Menu.Item
-                      onPress={() => {
-                        setMenuOpen(false);
-                        if (!stats || !active) return;
-                        Alert.alert(
-                          'Conversation stats',
-                          `Title: ${active.title}\nMessages: ${stats.total}\nYou: ${stats.userCount}\nAI: ${stats.assistantCount}\nCharacters: ${stats.chars}`,
-                        );
-                      }}
-                      title="Conversation stats"
-                    />
-                    <Menu.Item
-                      onPress={() => {
-                        setMenuOpen(false);
-                        void exportChat();
-                      }}
-                      title="Export chat"
-                    />
-                    <Menu.Item
-                      onPress={() => {
-                        setMenuOpen(false);
-                        deleteConversation(active.id);
-                      }}
-                      title="Delete chat"
-                    />
-                  </>
-                ) : null}
-                {conversations.slice(0, 8).map((c) => (
-                  <Menu.Item
-                    key={c.id}
-                    onPress={() => {
-                      setMenuOpen(false);
-                      setActive(c.id);
-                    }}
-                    title={`${c.pinned ? '📌 ' : ''}${c.favorite ? '★ ' : ''}${c.title}`}
-                  />
-                ))}
-              </Menu>
+      <View style={[styles.flex, { backgroundColor: theme.colors.background }]}>
+        <View style={[styles.container, styles.messagesPane]}>
+          <View style={styles.header}>
+            <View style={styles.headerText}>
+              <Text variant="headlineSmall">Chat</Text>
+              <Text variant="bodySmall" style={styles.muted} numberOfLines={2}>
+                {usingMock
+                  ? 'Demo replies until a model is installed — download one from Get.'
+                  : `On this phone · ${modelLabel}`}
+                {stats ? ` · ${stats.total} msgs` : ''}
+              </Text>
             </View>
+            <View style={styles.headerActions}>
+              <IconButton
+                icon="package-variant"
+                onPress={() => setModelMenu(true)}
+                accessibilityLabel="Switch model"
+              />
+              <IconButton
+                icon="dots-vertical"
+                onPress={() => setMenuOpen(true)}
+                accessibilityLabel="Chat options"
+              />
+            </View>
+          </View>
 
             {showSearch ? (
               <Searchbar
@@ -467,30 +436,22 @@ export function ChatScreen() {
               style={styles.flex}
               data={visibleMessages}
               keyExtractor={(item) => item.id}
-              contentContainerStyle={styles.messages}
+              contentContainerStyle={[
+                styles.messages,
+                { paddingBottom: 88 + (keyboardHeight > 0 ? 12 : 0) },
+              ]}
               initialNumToRender={12}
               windowSize={9}
               maxToRenderPerBatch={8}
               removeClippedSubviews
               keyboardShouldPersistTaps="handled"
-              keyboardDismissMode="interactive"
+              keyboardDismissMode="on-drag"
               onContentSizeChange={() => {
                 if (sending || visibleMessages.length) {
                   listRef.current?.scrollToEnd({ animated: true });
                 }
               }}
-              ListEmptyComponent={
-                <EmptyState
-                  title="Ask anything privately"
-                  description="Attach PDFs, docs, images, or code. Try: “Create a PowerPoint about AI” or “Summarize this file”. Messages stay on this phone."
-                  actionLabel={readyModels.length ? undefined : 'Download a model'}
-                  onAction={
-                    readyModels.length
-                      ? undefined
-                      : () => navigation.navigate('MarketplaceTab')
-                  }
-                />
-              }
+              ListEmptyComponent={null}
               renderItem={({ item }) => (
                 <View
                   style={[
@@ -565,6 +526,7 @@ export function ChatScreen() {
             style={[
               styles.composerDock,
               {
+                bottom: composerLift,
                 paddingBottom: composerPad,
                 backgroundColor: theme.colors.surface,
                 borderTopColor: theme.colors.outlineVariant ?? theme.colors.outline,
@@ -584,28 +546,192 @@ export function ChatScreen() {
             />
             {sending ? <ActivityIndicator style={{ marginTop: 8 }} /> : null}
           </View>
-        </View>
 
-        <Portal>
-          <Dialog visible={renameOpen} onDismiss={() => setRenameOpen(false)}>
-            <Dialog.Title>Rename conversation</Dialog.Title>
-            <Dialog.Content>
-              <TextInput value={renameValue} onChangeText={setRenameValue} mode="outlined" />
-            </Dialog.Content>
-            <Dialog.Actions>
-              <Button onPress={() => setRenameOpen(false)}>Cancel</Button>
-              <Button
-                onPress={() => {
-                  if (active) renameConversation(active.id, renameValue.trim() || 'Chat');
-                  setRenameOpen(false);
-                }}
-              >
-                Save
-              </Button>
-            </Dialog.Actions>
-          </Dialog>
-        </Portal>
-      </KeyboardAvoidingView>
+          <Portal>
+            <Dialog
+              visible={menuOpen}
+              onDismiss={() => setMenuOpen(false)}
+              style={styles.optionsDialog}
+            >
+              <Dialog.Title>Chat options</Dialog.Title>
+              <Dialog.ScrollArea style={styles.optionsScroll}>
+                <List.Item
+                  title="New chat"
+                  left={(props) => <List.Icon {...props} icon="plus" />}
+                  onPress={() => {
+                    setMenuOpen(false);
+                    startNewChat(selectedModelId);
+                    setDraft('');
+                    setAttachments([]);
+                  }}
+                />
+                <List.Item
+                  title="Search in chat"
+                  left={(props) => <List.Icon {...props} icon="magnify" />}
+                  onPress={() => {
+                    setMenuOpen(false);
+                    setShowSearch((v) => !v);
+                  }}
+                />
+                {active ? (
+                  <>
+                    <List.Item
+                      title="Rename"
+                      left={(props) => <List.Icon {...props} icon="pencil-outline" />}
+                      onPress={() => {
+                        setMenuOpen(false);
+                        setRenameValue(active.title);
+                        setRenameOpen(true);
+                      }}
+                    />
+                    <List.Item
+                      title={active.pinned ? 'Unpin' : 'Pin'}
+                      left={(props) => (
+                        <List.Icon {...props} icon={active.pinned ? 'pin-off-outline' : 'pin-outline'} />
+                      )}
+                      onPress={() => {
+                        setMenuOpen(false);
+                        togglePin(active.id);
+                      }}
+                    />
+                    <List.Item
+                      title={active.favorite ? 'Unfavorite' : 'Favorite'}
+                      left={(props) => (
+                        <List.Icon {...props} icon={active.favorite ? 'star' : 'star-outline'} />
+                      )}
+                      onPress={() => {
+                        setMenuOpen(false);
+                        toggleFavorite(active.id);
+                      }}
+                    />
+                    <List.Item
+                      title="Move to new folder"
+                      left={(props) => <List.Icon {...props} icon="folder-plus-outline" />}
+                      onPress={() => {
+                        setMenuOpen(false);
+                        const name = `Folder ${folders.length + 1}`;
+                        const folderId = createFolder(name);
+                        moveToFolder(active.id, folderId);
+                        Alert.alert('Moved', `Chat moved to ${name}.`);
+                      }}
+                    />
+                    <List.Item
+                      title="Conversation stats"
+                      left={(props) => <List.Icon {...props} icon="chart-box-outline" />}
+                      onPress={() => {
+                        setMenuOpen(false);
+                        if (!stats || !active) return;
+                        Alert.alert(
+                          'Conversation stats',
+                          `Title: ${active.title}\nMessages: ${stats.total}\nYou: ${stats.userCount}\nAI: ${stats.assistantCount}\nCharacters: ${stats.chars}`,
+                        );
+                      }}
+                    />
+                    <List.Item
+                      title="Export chat"
+                      left={(props) => <List.Icon {...props} icon="export-variant" />}
+                      onPress={() => {
+                        setMenuOpen(false);
+                        void exportChat();
+                      }}
+                    />
+                    <List.Item
+                      title="Delete chat"
+                      titleStyle={{ color: theme.colors.error }}
+                      left={(props) => (
+                        <List.Icon {...props} icon="delete-outline" color={theme.colors.error} />
+                      )}
+                      onPress={() => {
+                        setMenuOpen(false);
+                        deleteConversation(active.id);
+                      }}
+                    />
+                  </>
+                ) : null}
+
+                {conversations.length ? (
+                  <>
+                    <Divider style={styles.optionsDivider} />
+                    <Text variant="labelLarge" style={styles.optionsSection}>
+                      Recent chats
+                    </Text>
+                    {conversations.slice(0, 8).map((c) => (
+                      <List.Item
+                        key={c.id}
+                        title={c.title}
+                        description={c.id === activeId ? 'Current' : undefined}
+                        left={(props) => (
+                          <List.Icon
+                            {...props}
+                            icon={
+                              c.pinned
+                                ? 'pin'
+                                : c.favorite
+                                  ? 'star'
+                                  : c.id === activeId
+                                    ? 'chat'
+                                    : 'chat-outline'
+                            }
+                          />
+                        )}
+                        onPress={() => {
+                          setMenuOpen(false);
+                          setActive(c.id);
+                        }}
+                      />
+                    ))}
+                  </>
+                ) : null}
+              </Dialog.ScrollArea>
+              <Dialog.Actions>
+                <Button onPress={() => setMenuOpen(false)}>Close</Button>
+              </Dialog.Actions>
+            </Dialog>
+
+            <Dialog visible={modelMenu} onDismiss={() => setModelMenu(false)}>
+              <Dialog.Title>Switch model</Dialog.Title>
+              <Dialog.ScrollArea style={styles.optionsScroll}>
+                {readyModels.length ? (
+                  readyModels.map((m) => (
+                    <List.Item
+                      key={m.listingId}
+                      title={m.localName}
+                      left={(props) => <List.Icon {...props} icon="package-variant" />}
+                      onPress={() => {
+                        setModelMenu(false);
+                        if (active) setConversationModel(active.id, m.listingId);
+                        else createConversation(m.listingId);
+                      }}
+                    />
+                  ))
+                ) : (
+                  <Text style={styles.optionsEmpty}>No installed models yet. Download one from Get.</Text>
+                )}
+              </Dialog.ScrollArea>
+              <Dialog.Actions>
+                <Button onPress={() => setModelMenu(false)}>Close</Button>
+              </Dialog.Actions>
+            </Dialog>
+
+            <Dialog visible={renameOpen} onDismiss={() => setRenameOpen(false)}>
+              <Dialog.Title>Rename conversation</Dialog.Title>
+              <Dialog.Content>
+                <TextInput value={renameValue} onChangeText={setRenameValue} mode="outlined" />
+              </Dialog.Content>
+              <Dialog.Actions>
+                <Button onPress={() => setRenameOpen(false)}>Cancel</Button>
+                <Button
+                  onPress={() => {
+                    if (active) renameConversation(active.id, renameValue.trim() || 'Chat');
+                    setRenameOpen(false);
+                  }}
+                >
+                  Save
+                </Button>
+              </Dialog.Actions>
+            </Dialog>
+          </Portal>
+        </View>
     </ModelRequiredGate>
   );
 }
@@ -616,8 +742,14 @@ const styles = StyleSheet.create({
   messagesPane: { flex: 1, minHeight: 0 },
   header: { flexDirection: 'row', alignItems: 'center' },
   headerText: { flex: 1, minWidth: 0 },
+  headerActions: { flexDirection: 'row', alignItems: 'center', flexShrink: 0 },
   muted: { opacity: 0.7 },
   search: { marginBottom: 8 },
+  optionsDialog: { maxHeight: '85%' },
+  optionsScroll: { maxHeight: 420, paddingHorizontal: 0 },
+  optionsDivider: { marginVertical: 8 },
+  optionsSection: { paddingHorizontal: 16, paddingVertical: 8, opacity: 0.7 },
+  optionsEmpty: { paddingHorizontal: 24, paddingVertical: 16, opacity: 0.7 },
   messages: { paddingVertical: 12, paddingBottom: 24, flexGrow: 1 },
   bubble: {
     borderRadius: 16,
@@ -640,10 +772,13 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   composerDock: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
     paddingHorizontal: 12,
     paddingTop: 8,
     borderTopWidth: StyleSheet.hairlineWidth,
-    zIndex: 2,
-    flexShrink: 0,
+    zIndex: 20,
+    elevation: 12,
   },
 });

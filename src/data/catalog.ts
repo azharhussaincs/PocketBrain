@@ -1,4 +1,5 @@
 import type { ModelListing } from '../types/models';
+import { remoteListingStore } from '../services/RemoteListingStore';
 
 /**
  * Curated marketplace catalog.
@@ -7,6 +8,9 @@ import type { ModelListing } from '../types/models';
  * Integrity: `sha256` is optional. Leave blank unless the digest is confirmed for the
  * exact `downloadUrl` file (same publisher path / revision). Never invent hashes —
  * mismatched digests would fail every install. See release/MODEL_INTEGRITY_REPORT.md.
+ *
+ * Get also browses live Hugging Face GGUF listings (no hard size/model cap) via
+ * HuggingFaceModelService — those are cached in RemoteListingStore.
  */
 export const MODEL_CATALOG: ModelListing[] = [
   {
@@ -367,12 +371,107 @@ export const MODEL_CATALOG: ModelListing[] = [
     capabilities: ['coding', 'chat'],
     version: '7B',
   },
+  {
+    id: 'gemma-2-2b-it-q4',
+    name: 'Gemma 2 2B Instruct (Q4_K_M)',
+    description: 'Google Gemma 2 instruct GGUF — strong small chat model for phones with ~4GB+ RAM.',
+    author: 'Google',
+    license: 'Gemma',
+    category: 'text',
+    format: 'gguf',
+    preferredRuntime: 'llama.cpp',
+    downloadUrl:
+      'https://huggingface.co/bartowski/gemma-2-2b-it-GGUF/resolve/main/gemma-2-2b-it-Q4_K_M.gguf',
+    downloadSizeBytes: 1_700_000_000,
+    requiredRamBytes: 3_500_000_000,
+    requiredStorageBytes: 1_900_000_000,
+    quantization: 'Q4_K_M',
+    parameterCount: '2B',
+    supportedPlatforms: ['ios', 'android'],
+    offlineCapable: true,
+    tags: ['chat', 'gguf', 'gemma'],
+    capabilities: ['chat', 'documents'],
+    version: '2B',
+  },
+  {
+    id: 'llama-32-1b-instruct-q4',
+    name: 'Llama 3.2 1B Instruct (Q4_K_M)',
+    description: 'Meta Llama 3.2 1B instruct — compact multilingual chat for mid-range phones.',
+    author: 'Meta',
+    license: 'Llama 3.2',
+    category: 'text',
+    format: 'gguf',
+    preferredRuntime: 'llama.cpp',
+    downloadUrl:
+      'https://huggingface.co/bartowski/Llama-3.2-1B-Instruct-GGUF/resolve/main/Llama-3.2-1B-Instruct-Q4_K_M.gguf',
+    downloadSizeBytes: 800_000_000,
+    requiredRamBytes: 2_000_000_000,
+    requiredStorageBytes: 900_000_000,
+    quantization: 'Q4_K_M',
+    parameterCount: '1B',
+    supportedPlatforms: ['ios', 'android'],
+    offlineCapable: true,
+    tags: ['chat', 'gguf', 'llama', 'multilingual'],
+    capabilities: ['chat', 'documents', 'translation'],
+    version: '1B',
+  },
+  {
+    id: 'llama-32-3b-instruct-q4',
+    name: 'Llama 3.2 3B Instruct (Q4_K_M)',
+    description: 'Meta Llama 3.2 3B instruct — stronger chat/reasoning for higher-RAM devices.',
+    author: 'Meta',
+    license: 'Llama 3.2',
+    category: 'text',
+    format: 'gguf',
+    preferredRuntime: 'llama.cpp',
+    downloadUrl:
+      'https://huggingface.co/bartowski/Llama-3.2-3B-Instruct-GGUF/resolve/main/Llama-3.2-3B-Instruct-Q4_K_M.gguf',
+    downloadSizeBytes: 2_000_000_000,
+    requiredRamBytes: 4_500_000_000,
+    requiredStorageBytes: 2_300_000_000,
+    quantization: 'Q4_K_M',
+    parameterCount: '3B',
+    supportedPlatforms: ['ios', 'android'],
+    offlineCapable: true,
+    tags: ['chat', 'gguf', 'llama', 'reasoning'],
+    capabilities: ['chat', 'documents', 'reasoning'],
+    version: '3B',
+  },
+  {
+    id: 'mistral-7b-instruct-q4',
+    name: 'Mistral 7B Instruct v0.3 (Q4_K_M)',
+    description: 'Mistral 7B instruct — capable general chat/code help on high-RAM phones/tablets.',
+    author: 'Mistral AI',
+    license: 'Apache-2.0',
+    category: 'text',
+    format: 'gguf',
+    preferredRuntime: 'llama.cpp',
+    downloadUrl:
+      'https://huggingface.co/bartowski/Mistral-7B-Instruct-v0.3-GGUF/resolve/main/Mistral-7B-Instruct-v0.3-Q4_K_M.gguf',
+    downloadSizeBytes: 4_400_000_000,
+    requiredRamBytes: 8_000_000_000,
+    requiredStorageBytes: 4_900_000_000,
+    quantization: 'Q4_K_M',
+    parameterCount: '7B',
+    supportedPlatforms: ['ios', 'android'],
+    offlineCapable: true,
+    tags: ['chat', 'gguf', 'large'],
+    capabilities: ['chat', 'documents', 'coding'],
+    version: '7B',
+  },
 ];
 
 export function getListingById(id: string): ModelListing | undefined {
-  return MODEL_CATALOG.find((m) => m.id === id);
+  return MODEL_CATALOG.find((m) => m.id === id) ?? remoteListingStore.get(id);
 }
 
 export function getStarterModel(): ModelListing {
   return MODEL_CATALOG.find((m) => m.isStarter) ?? MODEL_CATALOG[0];
+}
+
+/** All known listings: curated catalog + cached Hugging Face browse results. */
+export function listAllKnownListings(): ModelListing[] {
+  const remote = remoteListingStore.list();
+  const seen = new Set(MODEL_CATALOG.map((m) => m.id));
+  return [...MODEL_CATALOG, ...remote.filter((m) => !seen.has(m.id))];
 }

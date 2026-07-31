@@ -225,7 +225,12 @@ export function modelsInCollection(collection: MarketplaceCollectionId): Friendl
         .map((m) => toFriendlyCard(m.id))
         .filter((c): c is FriendlyModelCardData => c != null);
     case 'image':
-      return all.filter((c) => c.registered.capabilities.includes('image_generation'));
+      return all.filter(
+        (c) =>
+          c.registered.capabilities.includes('image_generation') ||
+          c.registered.capabilities.includes('vision') ||
+          c.listing?.category === 'image',
+      );
     case 'translation': {
       const tr = all.filter((c) => c.registered.capabilities.includes('translation'));
       return tr.length > 0 ? tr : all.filter((c) => c.listing?.tags.includes('multilingual') || c.registered.capabilities.includes('chat'));

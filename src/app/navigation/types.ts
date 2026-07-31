@@ -10,7 +10,13 @@ export type HomeStackParamList = {
 };
 
 export type MarketplaceStackParamList = {
-  MarketplaceHome: undefined;
+  MarketplaceHome:
+    | {
+        collection?: import('../../discover/recommendations').MarketplaceCollectionId;
+        query?: string;
+        titleHint?: string;
+      }
+    | undefined;
   ModelDetail: { modelId: string };
 };
 
@@ -45,7 +51,7 @@ export type RootTabParamList = {
   WorkspaceTab: NavigatorScreenParams<WorkspaceStackParamList> | undefined;
   ModelsTab: undefined;
   DownloadsTab: undefined;
-  ChatTab: undefined;
+  ChatTab: { newChat?: boolean } | undefined;
   PlaygroundTab: undefined;
   SettingsTab: NavigatorScreenParams<SettingsStackParamList> | undefined;
 };

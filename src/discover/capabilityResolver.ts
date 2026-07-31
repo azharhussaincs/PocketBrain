@@ -110,10 +110,10 @@ export function resolveCapabilityRequest(
       inputCapabilities,
       requestedTask: 'IMAGE_GENERATION',
       requiredCapability: 'image_generation',
-      label: 'Image generation',
+      label: 'Image / logo design',
       confidence: 'high',
       limitationMessage:
-        'Local image generation needs a linked diffusion runtime and a compatible model. PocketBrain will not invent placeholder images.',
+        'Vision models analyze photos; they do not generate new images. Pixel generation needs a diffusion runtime (not linked yet).',
     };
   }
 

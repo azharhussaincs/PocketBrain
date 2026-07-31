@@ -1,4 +1,4 @@
-import { MODEL_CATALOG, getListingById } from '../../data/catalog';
+import { getListingById, listAllKnownListings } from '../../data/catalog';
 import { modelManager } from '../../services/ModelManager';
 import { canInstallModel, detectHardware } from '../../services/HardwareService';
 import type { HardwareProfile } from '../../types/hardware';
@@ -139,9 +139,15 @@ export class ModelRegistry {
         .map((m) => [m.listingId, m.filePath]),
     );
 
-    const catalog = MODEL_CATALOG.map((listing) =>
+    const catalog = listAllKnownListings().map((listing) =>
       toRegistered(listing, installed.get(listing.id)),
     );
+    // Also surface installed models whose listing is only in memory/cache.
+    for (const [id, path] of installed) {
+      if (catalog.some((c) => c.id === id)) continue;
+      const listing = getListingById(id);
+      if (listing) catalog.push(toRegistered(listing, path));
+    }
     return [...SYSTEM_ENGINES, ...catalog];
   }
 

@@ -4,6 +4,7 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
+  TextInput as RNTextInput,
   useWindowDimensions,
   View,
 } from 'react-native';
@@ -12,7 +13,6 @@ import {
   IconButton,
   Menu,
   Text,
-  TextInput,
   useTheme,
 } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -292,18 +292,13 @@ export function UniversalComposer({
             },
           ]}
         >
-          <TextInput
-            mode="flat"
+          <RNTextInput
             placeholder={placeholder}
+            placeholderTextColor={theme.colors.onSurfaceDisabled}
             value={draft}
             onChangeText={onChangeDraft}
-            style={styles.input}
-            contentStyle={styles.inputContent}
-            underlineColor="transparent"
-            activeUnderlineColor="transparent"
-            dense
-            disabled={sending}
-            // Single-line so the keyboard Enter/Send key actually sends.
+            style={[styles.input, { color: theme.colors.onSurface }]}
+            editable={!sending}
             multiline={false}
             blurOnSubmit
             returnKeyType="send"
@@ -391,18 +386,16 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
     justifyContent: 'center',
     minHeight: 48,
-    maxHeight: 56,
+    height: 48,
     overflow: 'hidden',
+    paddingHorizontal: 14,
   },
   input: {
-    backgroundColor: 'transparent',
+    flex: 1,
     height: 48,
-  },
-  inputContent: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    minHeight: 44,
-    textAlignVertical: 'center',
+    paddingVertical: 0,
+    margin: 0,
+    fontSize: 16,
   },
   footerHint: {
     flexDirection: 'row',

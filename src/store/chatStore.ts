@@ -9,6 +9,8 @@ interface ChatState {
   folders: ChatFolder[];
   activeConversationId: string | null;
   createConversation: (modelId?: string, folderId?: string) => string;
+  /** Open a blank chat (reuse empty thread if one exists). Like ChatGPT “New chat”. */
+  startNewChat: (modelId?: string) => string;
   setActive: (id: string | null) => void;
   setConversationModel: (id: string, modelId: string) => void;
   renameConversation: (id: string, title: string) => void;
@@ -63,6 +65,25 @@ export const useChatStore = create<ChatState>()(
           activeConversationId: conversation.id,
         }));
         return conversation.id;
+      },
+      startNewChat: (modelId) => {
+        const state = get();
+        const active = state.conversations.find((c) => c.id === state.activeConversationId);
+        if (active && active.messages.length === 0) {
+          if (modelId && active.modelId !== modelId) {
+            get().setConversationModel(active.id, modelId);
+          }
+          return active.id;
+        }
+        const empty = state.conversations.find((c) => c.messages.length === 0);
+        if (empty) {
+          set({ activeConversationId: empty.id });
+          if (modelId && empty.modelId !== modelId) {
+            get().setConversationModel(empty.id, modelId);
+          }
+          return empty.id;
+        }
+        return get().createConversation(modelId);
       },
       setActive: (id) => set({ activeConversationId: id }),
       setConversationModel: (id, modelId) =>
