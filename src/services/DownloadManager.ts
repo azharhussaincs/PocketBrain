@@ -18,6 +18,12 @@ const MODELS_DIR_NAME = 'models';
 const QUEUE_KEY = '@pocketbrain/download_queue_v1';
 const MAX_CONCURRENT = 2;
 
+/** Browser-like UA helps some CDNs; avoid empty/malformed Authorization that HF rejects. */
+const DOWNLOAD_HEADERS: Record<string, string> = {
+  'User-Agent': 'PocketBrain/1.9.3 (Android; expo-file-system)',
+  Accept: '*/*',
+};
+
 export function getModelsDirectory(): Directory {
   const dir = new Directory(Paths.document, MODELS_DIR_NAME);
   if (!dir.exists) {
@@ -149,6 +155,7 @@ export class DownloadManager {
       this.updateJob(next.id, { state: 'active' });
       const destination = new File(next.destinationPath);
       const task = File.createDownloadTask(next.url, destination, {
+        headers: DOWNLOAD_HEADERS,
         onProgress: this.attachProgress(next.id, next.totalBytes),
       });
       this.tasks.set(next.id, task);
@@ -322,9 +329,11 @@ export class DownloadManager {
     const pauseState = job.pauseState as DownloadPauseState | undefined;
     const task = pauseState
       ? DownloadTask.fromSavable(pauseState, {
+          headers: DOWNLOAD_HEADERS,
           onProgress: this.attachProgress(jobId, job.totalBytes),
         })
       : File.createDownloadTask(job.url, new File(job.destinationPath), {
+          headers: DOWNLOAD_HEADERS,
           onProgress: this.attachProgress(jobId, job.totalBytes),
         });
 

@@ -83,7 +83,14 @@ export function FriendlyModelCard({
 
       <View style={styles.actions}>
         {onPrimary ? (
-          <Button mode="contained" compact loading={busy} onPress={onPrimary}>
+          <Button
+            mode="contained"
+            loading={busy}
+            onPress={onPrimary}
+            style={styles.primaryBtn}
+            contentStyle={styles.primaryBtnContent}
+            icon={model.installed ? 'check' : 'download'}
+          >
             {primaryLabel ?? (model.installed ? 'Open' : 'Download')}
           </Button>
         ) : null}
@@ -130,5 +137,7 @@ const styles = StyleSheet.create({
   metaRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginTop: 10 },
   meta: { minWidth: 72 },
   actions: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 12 },
+  primaryBtn: { flexGrow: 1, borderRadius: 12 },
+  primaryBtnContent: { minHeight: 44 },
   tech: { marginTop: 10, gap: 2, opacity: 0.75 },
 });

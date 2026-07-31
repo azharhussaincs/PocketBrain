@@ -19,9 +19,10 @@ export const MODEL_CATALOG: ModelListing[] = [
     category: 'text',
     format: 'gguf',
     preferredRuntime: 'llama.cpp',
+    // Official HuggingFaceTB GGUF repo now returns HTTP 401 unauthenticated; use public bartowski mirror.
     downloadUrl:
-      'https://huggingface.co/HuggingFaceTB/SmolLM2-135M-Instruct-GGUF/resolve/main/smollm2-135m-instruct-q4_k_m.gguf',
-    downloadSizeBytes: 108_000_000,
+      'https://huggingface.co/bartowski/SmolLM2-135M-Instruct-GGUF/resolve/main/SmolLM2-135M-Instruct-Q4_K_M.gguf',
+    downloadSizeBytes: 105_000_000,
     requiredRamBytes: 400_000_000,
     requiredStorageBytes: 120_000_000,
     quantization: 'Q4_K_M',
@@ -44,8 +45,8 @@ export const MODEL_CATALOG: ModelListing[] = [
     format: 'gguf',
     preferredRuntime: 'llama.cpp',
     downloadUrl:
-      'https://huggingface.co/HuggingFaceTB/SmolLM2-360M-Instruct-GGUF/resolve/main/smollm2-360m-instruct-q4_k_m.gguf',
-    downloadSizeBytes: 270_000_000,
+      'https://huggingface.co/bartowski/SmolLM2-360M-Instruct-GGUF/resolve/main/SmolLM2-360M-Instruct-Q4_K_M.gguf',
+    downloadSizeBytes: 271_000_000,
     requiredRamBytes: 700_000_000,
     requiredStorageBytes: 300_000_000,
     quantization: 'Q4_K_M',
@@ -174,8 +175,8 @@ export const MODEL_CATALOG: ModelListing[] = [
     format: 'gguf',
     preferredRuntime: 'llama.cpp',
     downloadUrl:
-      'https://huggingface.co/HuggingFaceTB/SmolVLM-256M-Instruct-GGUF/resolve/main/SmolVLM-256M-Instruct-Q4_K_M.gguf',
-    downloadSizeBytes: 200_000_000,
+      'https://huggingface.co/mradermacher/SmolVLM-256M-Instruct-GGUF/resolve/main/SmolVLM-256M-Instruct.Q4_K_M.gguf',
+    downloadSizeBytes: 125_000_000,
     requiredRamBytes: 900_000_000,
     requiredStorageBytes: 250_000_000,
     quantization: 'Q4_K_M',

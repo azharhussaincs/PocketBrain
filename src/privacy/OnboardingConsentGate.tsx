@@ -5,6 +5,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useConsentStore } from './consentStore';
 import { AI_DISCLAIMER, PRIVACY_POLICY, TERMS_OF_SERVICE } from '../legal/content/policies';
 import { AI_TASKS, type TaskId } from '../discover/tasks';
+import { BrandLogo } from '../components/BrandLogo';
 
 type Step =
   | 'welcome'
@@ -54,19 +55,20 @@ export function OnboardingConsentGate({ children }: { children: React.ReactNode 
       <ScrollView contentContainerStyle={styles.content}>
         {step === 'welcome' ? (
           <>
-            <Text variant="displaySmall" style={styles.brand}>
-              PocketBrain
-            </Text>
-            <Text variant="headlineSmall">Your offline AI platform</Text>
-            <Text variant="bodyLarge" style={styles.sub}>
-              Install open-source models on this device. No account. No cloud chat. Privacy by
-              design.
-            </Text>
-            <Bullet icon="shield-lock-outline" text="AI runs locally after models are installed" />
-            <Bullet icon="download-outline" text="Download only the models you need" />
-            <Bullet icon="wifi-off" text="Many features keep working fully offline" />
-            <Button mode="contained" onPress={() => setStep('how')} style={styles.cta}>
-              Continue
+            <BrandLogo
+              size={72}
+              tagline="Your offline AI platform — no account, no cloud chat."
+            />
+            <Bullet icon="shield-lock-outline" text="AI runs on this phone after you install a model" />
+            <Bullet icon="download-outline" text="Download only what you need (Wi‑Fi or mobile data)" />
+            <Bullet icon="wifi-off" text="Chat and docs keep working offline" />
+            <Button
+              mode="contained"
+              onPress={() => setStep('how')}
+              style={styles.cta}
+              contentStyle={styles.ctaContent}
+            >
+              Get started
             </Button>
           </>
         ) : null}
@@ -78,7 +80,7 @@ export function OnboardingConsentGate({ children }: { children: React.ReactNode 
               1. Pick a task — write, study, code, vision, voice, and more.
             </Text>
             <Text variant="bodyLarge" style={styles.sub}>
-              2. Download a recommended model to device storage (Wi‑Fi preferred).
+              2. Download a recommended model (Wi‑Fi or mobile data).
             </Text>
             <Text variant="bodyLarge" style={styles.sub}>
               3. Use AI offline. Your prompts and files stay on this phone.
@@ -145,15 +147,19 @@ export function OnboardingConsentGate({ children }: { children: React.ReactNode 
           <>
             <Text variant="titleMedium">Downloads & privacy</Text>
             <Checkbox.Item
-              label="Allow model downloads over the network (Wi‑Fi preferred)"
+              label="Allow model downloads over the network (Wi‑Fi or mobile data)"
               status={downloads ? 'checked' : 'unchecked'}
               onPress={() => setDownloads((v) => !v)}
             />
             <Text variant="bodySmall" style={styles.sub}>
-              Analytics and crash reporting stay off. Optional opt-in later in Settings → Privacy.
-              No ads at launch.
+              Analytics and crash reporting stay off. Optional later in Settings. No ads at launch.
             </Text>
-            <Button mode="contained" onPress={() => setStep('firstTask')} style={styles.cta}>
+            <Button
+              mode="contained"
+              onPress={() => setStep('firstTask')}
+              style={styles.cta}
+              contentStyle={styles.ctaContent}
+            >
               Choose what to do first
             </Button>
           </>
@@ -223,19 +229,19 @@ function Bullet({ icon, text }: { icon: string; text: string }) {
 const styles = StyleSheet.create({
   gate: { flex: 1 },
   content: { padding: 20, paddingBottom: 56, gap: 12 },
-  brand: { fontWeight: '700', marginBottom: 4 },
   sub: { opacity: 0.8, lineHeight: 22 },
   doc: { lineHeight: 20, fontSize: 13 },
-  cta: { marginTop: 12 },
+  cta: { marginTop: 12, borderRadius: 14 },
+  ctaContent: { minHeight: 48 },
   bullet: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 8 },
   bulletText: { flex: 1 },
   taskGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 8 },
   taskCard: {
     width: '47%',
     borderWidth: StyleSheet.hairlineWidth,
-    borderRadius: 14,
-    padding: 12,
-    minHeight: 110,
+    borderRadius: 16,
+    padding: 14,
+    minHeight: 118,
   },
   taskTitle: { marginTop: 8 },
 });

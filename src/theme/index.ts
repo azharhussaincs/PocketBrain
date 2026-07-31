@@ -17,7 +17,7 @@ export const brand = {
 export const lightTheme: MD3Theme = {
   ...MD3LightTheme,
   fonts: fontConfig,
-  roundness: 12,
+  roundness: 16,
   colors: {
     ...MD3LightTheme.colors,
     primary: brand.primary,
@@ -38,7 +38,7 @@ export const lightTheme: MD3Theme = {
 export const darkTheme: MD3Theme = {
   ...MD3DarkTheme,
   fonts: fontConfig,
-  roundness: 12,
+  roundness: 16,
   colors: {
     ...MD3DarkTheme.colors,
     primary: '#2DD4BF',

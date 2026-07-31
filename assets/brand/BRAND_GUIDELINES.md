@@ -1,11 +1,11 @@
 # PocketBrain Brand Guidelines
 
-**Version:** 1.6.0 · **Updated:** 2026-07-30  
-**Artwork:** Original vector mark (brain + pocket / privacy shield). No third-party logos.
+**Version:** 1.9.3 · **Updated:** 2026-07-31  
+**Artwork:** Original vector mark (pocket silhouette + neural brain). No third-party logos.
 
 ## Concept
 
-Offline AI that stays in your pocket — privacy-first, local intelligence, minimal Material 3 aesthetics.
+Offline AI that stays in your pocket — privacy-first, local intelligence, clear Material 3 surfaces. The launcher mark emphasizes a readable **pocket** outline plus brain nodes so it stays recognizable at 48dp.
 
 ## Logo files (SVG masters)
 

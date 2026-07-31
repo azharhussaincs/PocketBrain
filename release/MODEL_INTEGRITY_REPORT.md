@@ -19,7 +19,8 @@
 
 ## Why catalog hashes remain blank
 
-1. Catalog `downloadUrl` values point at specific Hugging Face paths (e.g. `HuggingFaceTB/SmolLM2-135M-Instruct-GGUF/...`).  
+1. Catalog `downloadUrl` values point at specific Hugging Face paths (e.g. `bartowski/SmolLM2-135M-Instruct-GGUF/...`).  
+   Official `HuggingFaceTB/*-GGUF` resolve URLs may return HTTP 401 without auth — prefer public mirrors.
 2. Public SHA256 values found for **other** republishers (e.g. bartowski, unsloth) are **not** proven identical to the HuggingFaceTB file bytes at our URL.  
 3. Inventing or copying a hash from a different repo would cause **every** install to fail integrity checks — worse than optional verify.  
 4. Phase 17 rule: **never invent hashes.**

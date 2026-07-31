@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Alert, FlatList, StyleSheet, View } from 'react-native';
+import { Alert, FlatList, ScrollView, StyleSheet, View } from 'react-native';
 import { Chip, Searchbar, Text } from 'react-native-paper';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import {
@@ -19,7 +19,6 @@ import { useAppStore } from '../../../store/appStore';
 import { useSettingsStore } from '../../../store/settingsStore';
 import { useConsentStore } from '../../../privacy/consentStore';
 import type { MarketplaceStackParamList } from '../../navigation/types';
-import { t } from '../../../i18n/strings';
 import { EmptyState } from '../../../components/EmptyState';
 import { LIST_PERF } from '../../../utils/listPerf';
 
@@ -59,7 +58,6 @@ export function MarketplaceScreen({ navigation }: Props) {
   const hardware = useAppStore((s) => s.hardware);
   const wifiOnly = useSettingsStore((s) => s.wifiOnlyDownloads);
   const offlineMode = useSettingsStore((s) => s.offlineMode);
-  const language = useSettingsStore((s) => s.language);
   const allowDownloads = useConsentStore((s) => s.allowModelDownloads);
   const [collection, setCollection] = useState<MarketplaceCollectionId>('all');
   const [sizeTier, setSizeTier] = useState<ModelSizeTier | 'all'>('all');
@@ -130,10 +128,10 @@ export function MarketplaceScreen({ navigation }: Props) {
 
   return (
     <View style={styles.container}>
-      <Text variant="headlineSmall">{t('marketplace.title', language)}</Text>
+      <Text variant="headlineSmall">Get models</Text>
       <Text variant="bodyMedium" style={styles.sub}>
-        Browse all models — Small, Medium, and Large. Pick what fits your phone storage and RAM.
-        Downloads work on Wi‑Fi or mobile data.
+        Pick a size that fits your phone. Small is best for first install. Downloads work on Wi‑Fi
+        or mobile data.
       </Text>
       <Searchbar
         placeholder="Search models…"
@@ -145,14 +143,15 @@ export function MarketplaceScreen({ navigation }: Props) {
       <Text variant="labelLarge" style={styles.sectionLabel}>
         Size
       </Text>
-      <FlatList
+      <ScrollView
         horizontal
-        data={SIZE_FILTERS}
-        keyExtractor={(item) => item.id}
         showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.chipsRow}
         style={styles.chips}
-        renderItem={({ item }) => (
+      >
+        {SIZE_FILTERS.map((item) => (
           <Chip
+            key={item.id}
             selected={sizeTier === item.id}
             onPress={() => setSizeTier(item.id)}
             style={styles.chip}
@@ -160,19 +159,20 @@ export function MarketplaceScreen({ navigation }: Props) {
           >
             {item.label}
           </Chip>
-        )}
-      />
+        ))}
+      </ScrollView>
       <Text variant="labelLarge" style={styles.sectionLabel}>
         Category
       </Text>
-      <FlatList
+      <ScrollView
         horizontal
-        data={COLLECTIONS}
-        keyExtractor={(item) => item.id}
         showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.chipsRow}
         style={styles.chips}
-        renderItem={({ item }) => (
+      >
+        {COLLECTIONS.map((item) => (
           <Chip
+            key={item.id}
             selected={collection === item.id}
             onPress={() => setCollection(item.id)}
             style={styles.chip}
@@ -180,21 +180,22 @@ export function MarketplaceScreen({ navigation }: Props) {
           >
             {item.label}
           </Chip>
-        )}
-      />
+        ))}
+      </ScrollView>
       <View style={styles.filterRow}>
         <Chip selected={preferDeviceFit} onPress={() => setPreferDeviceFit((v) => !v)} compact>
           Prefer fits this phone
         </Chip>
       </View>
-      <FlatList
+      <ScrollView
         horizontal
-        data={SORTS}
-        keyExtractor={(item) => item.id}
         showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.chipsRow}
         style={styles.chips}
-        renderItem={({ item }) => (
+      >
+        {SORTS.map((item) => (
           <Chip
+            key={item.id}
             selected={sort === item.id}
             onPress={() => setSort(item.id)}
             style={styles.chip}
@@ -202,8 +203,8 @@ export function MarketplaceScreen({ navigation }: Props) {
           >
             {item.label}
           </Chip>
-        )}
-      />
+        ))}
+      </ScrollView>
       <Text variant="labelMedium" style={styles.count}>
         {data.length} model{data.length === 1 ? '' : 's'}
       </Text>
@@ -254,6 +255,7 @@ const styles = StyleSheet.create({
   sectionLabel: { marginBottom: 4, opacity: 0.85 },
   filterRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 8 },
   chips: { maxHeight: 44, marginBottom: 8 },
+  chipsRow: { flexDirection: 'row', alignItems: 'center', paddingRight: 8 },
   chip: { marginRight: 6 },
   count: { opacity: 0.65, marginBottom: 6 },
   why: { opacity: 0.7, marginBottom: 4 },

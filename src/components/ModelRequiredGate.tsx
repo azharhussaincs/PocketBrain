@@ -87,16 +87,16 @@ export function ModelRequiredGate({
 
   return (
     <View style={styles.container}>
-      <Text variant="headlineSmall">{title ?? 'Model required'}</Text>
+      <Text variant="headlineSmall">{title ?? 'Almost ready'}</Text>
       <Text variant="bodyLarge" style={styles.message}>
         {gate.message}
       </Text>
       <Text variant="titleMedium" style={styles.section}>
-        Easiest to start
+        Recommended for you
       </Text>
       {!gate.recommendations.length ? (
         <Text style={styles.hint}>
-          No catalog models for this feature yet. Open Models to browse everything.
+          No starter model listed for this feature yet. Open Get to browse everything.
         </Text>
       ) : (
         gate.recommendations.slice(0, 2).map((card) => (
@@ -107,15 +107,15 @@ export function ModelRequiredGate({
             <FriendlyModelCard
               model={card}
               busy={busyId === card.id}
-              primaryLabel="Install"
+              primaryLabel="Install now"
               simple
               onPrimary={() => void download(card.id)}
             />
           </View>
         ))
       )}
-      <Button mode="contained" onPress={() => setTick((t) => t + 1)} style={styles.refresh}>
-        Refresh
+      <Button mode="outlined" onPress={() => setTick((t) => t + 1)} style={styles.refresh}>
+        I already installed a model — refresh
       </Button>
     </View>
   );

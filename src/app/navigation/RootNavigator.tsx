@@ -52,7 +52,7 @@ function HomeStackNavigator() {
       <HomeStack.Screen
         name="Home"
         component={HomeScreen}
-        options={{ title: 'PocketBrain' }}
+        options={{ title: 'Home', headerTitle: () => null, headerShown: false }}
       />
       <HomeStack.Screen
         name="TaskDetail"
@@ -84,7 +84,7 @@ function MarketplaceStackNavigator() {
       <MarketplaceStack.Screen
         name="MarketplaceHome"
         component={MarketplaceScreen}
-        options={{ title: 'Marketplace' }}
+        options={{ title: 'Get models' }}
       />
       <MarketplaceStack.Screen
         name="ModelDetail"
@@ -195,31 +195,37 @@ export function RootNavigator() {
           route.name !== 'HomeTab',
         tabBarActiveTintColor: theme.colors.primary,
         tabBarInactiveTintColor: theme.colors.outline,
-        tabBarLabelStyle: { fontSize: 10, fontWeight: '600' },
+        tabBarHideOnKeyboard: true,
+        tabBarIcon: ({ color, size, focused }) => {
+          const map: Record<
+            keyof RootTabParamList,
+            { outline: keyof typeof MaterialCommunityIcons.glyphMap; filled: keyof typeof MaterialCommunityIcons.glyphMap }
+          > = {
+            HomeTab: { outline: 'home-outline', filled: 'home' },
+            MarketplaceTab: { outline: 'storefront-outline', filled: 'storefront' },
+            WorkspaceTab: { outline: 'briefcase-outline', filled: 'briefcase' },
+            ModelsTab: { outline: 'cube-outline', filled: 'cube' },
+            DownloadsTab: { outline: 'download-outline', filled: 'download' },
+            ChatTab: { outline: 'chat-processing-outline', filled: 'chat-processing' },
+            PlaygroundTab: { outline: 'flask-outline', filled: 'flask' },
+            SettingsTab: { outline: 'cog-outline', filled: 'cog' },
+          };
+          const icons = map[route.name];
+          return (
+            <MaterialCommunityIcons
+              name={focused ? icons.filled : icons.outline}
+              color={color}
+              size={size}
+            />
+          );
+        },
+        tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
         tabBarStyle: {
           backgroundColor: theme.colors.surface,
           borderTopColor: theme.colors.outlineVariant ?? theme.colors.outline,
-          minHeight: 56,
-          paddingBottom: 2,
-        },
-        tabBarHideOnKeyboard: true,
-        tabBarIcon: ({ color, size }) => {
-          const map: Record<
-            keyof RootTabParamList,
-            keyof typeof MaterialCommunityIcons.glyphMap
-          > = {
-            HomeTab: 'home-outline',
-            MarketplaceTab: 'storefront-outline',
-            WorkspaceTab: 'briefcase-outline',
-            ModelsTab: 'cube-outline',
-            DownloadsTab: 'download-outline',
-            ChatTab: 'chat-processing-outline',
-            PlaygroundTab: 'flask-outline',
-            SettingsTab: 'cog-outline',
-          };
-          return (
-            <MaterialCommunityIcons name={map[route.name]} color={color} size={size} />
-          );
+          minHeight: 60,
+          paddingBottom: 4,
+          paddingTop: 4,
         },
       })}
     >

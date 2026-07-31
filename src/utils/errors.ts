@@ -23,6 +23,15 @@ export function formatNetworkDownloadError(error: unknown): string {
   if (/cancelled/i.test(raw)) {
     return 'Download cancelled.';
   }
+  if (/HTTP\s*401|Unauthorized|Invalid username or password/i.test(raw)) {
+    return 'Download was blocked by the model host (HTTP 401). The catalog link may need a public mirror — update the app or try another model, then retry.';
+  }
+  if (/HTTP\s*403|Forbidden/i.test(raw)) {
+    return 'Download was forbidden by the model host (HTTP 403). Try another model or retry later.';
+  }
+  if (/HTTP\s*404|Not Found/i.test(raw)) {
+    return 'Model file was not found on the host (HTTP 404). Try another model from Marketplace.';
+  }
   return raw || 'Download failed. Check storage space and network, then retry.';
 }
 

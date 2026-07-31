@@ -22,7 +22,7 @@
 | --- | --- |
 | **App name** | PocketBrain |
 | **Package** | `com.pocketbrain.app` |
-| **App version** | **1.9.3** |
+| **App version** | **1.0** |
 | **Android `versionCode`** | 16 |
 | **Repository completion** | **100%** (project scope — [`release/FINAL_RELEASE_CERTIFICATION.md`](release/FINAL_RELEASE_CERTIFICATION.md)) |
 | **Production validation** | **Awaiting external execution** |
