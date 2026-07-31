@@ -1,6 +1,6 @@
 # PocketBrain Brand Guidelines
 
-**Version:** 1.9.3 · **Updated:** 2026-07-31  
+**Version:** 1.0.0 · **Updated:** 2026-07-31  
 **Artwork:** Original vector mark (pocket silhouette + neural brain). No third-party logos.
 
 ## Concept

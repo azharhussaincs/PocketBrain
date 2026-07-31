@@ -57,7 +57,7 @@ Prepare IARC questionnaire for a productivity tool without social UGC feeds. Kee
 - [x] Splash screen
 - [x] Feature graphic 1024×500 (`assets/play/feature-graphic.png`)
 - [x] High-res icon 512×512 (`assets/play/icon-512.png`)
-- [ ] Phone screenshots (min 2) — capture on device into `assets/play/screenshots/`
+- [x] Phone screenshots (min 2) — `store/play/screenshots/phone/` (device captures)
 - [ ] Tablet screenshots if tablet listing enabled
 
 ## Legal hosting status
@@ -65,9 +65,10 @@ Prepare IARC questionnaire for a productivity tool without social UGC feeds. Kee
 - Configured URLs: `https://pocketbrain.app/privacy`, `https://pocketbrain.app/terms`
 - Repo HTML ready (`store/legal/`). Live deploy still required — see `store/legal/HOSTING.md`. Do not claim URLs are compliant until `curl -sL` shows policy body text.
 - Publish-ready HTML: `store/legal/privacy.html`, `store/legal/terms.html`
+- One-click static pack: `store/legal/site/` (`vercel.json` / `netlify.toml`)
 
 ## Versioning
 
-- Marketing version: `expo.version` in app.json (currently 1.9.3)
-- Android `versionCode`: 16 (increment on every Play upload)
+- Marketing version: `expo.version` in app.json (currently 1.0.0)
+- Android `versionCode`: 17 (increment on every Play upload)
 - Keep release notes in Play Console and `store/play/RELEASE_NOTES.md`

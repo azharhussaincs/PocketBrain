@@ -1,6 +1,9 @@
 # Hosting PocketBrain legal pages
 
-**Status:** Repository HTML is production-ready. **Live hosting is an external action** — do not claim URLs are compliant until verified.
+**Status:** Repository HTML + `store/legal/site/` deploy pack are production-ready. **Live hosting is an external action** — do not claim URLs are compliant until verified.
+
+Publish from: [`store/legal/site/README.md`](site/README.md).
+
 
 Configured app URLs (`app.json` → `extra`):
 

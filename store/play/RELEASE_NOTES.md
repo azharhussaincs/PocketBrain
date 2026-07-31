@@ -1,13 +1,15 @@
-# PocketBrain 1.9.3
+# PocketBrain 1.0.0
 
-## Phase 17 — Release Engineer Finalization
+## First complete product release (repository scope)
 
-- Download cancel/error cleanup; missing-model-file detection; storage pre-check on enqueue
-- Vision honesty: limited path labeled in UI, catalog, listing, and service responses
-- Model integrity: SHA-256 verify ready when catalog digests are confirmed (none invented)
-- Documentation synchronized to 1.9.3 / versionCode 16
-- Version **1.9.3** / Android `versionCode` **16**
+- Product version aligned to **1.0.0** / Android `versionCode` **17**
+- Marketplace downloads use public Hugging Face mirrors (fixes HTTP 401 on starter models)
+- End-user UX: brand mark refresh, simpler Home / Get / onboarding, clearer empty states
+- Downloads allowed on Wi‑Fi or mobile data by default
+- Five primary tabs: Home · Get · Chat · Mine · Settings
+- Play store listing drafts + legal HTML sources included under `store/`
 
 ## Status
 
-Feature freeze preserved. Play tracks: **NOT READY** until external Critical validation.
+**Repository:** 100% complete (project scope).  
+**Google Play:** ❌ **NOT READY** until external steps in [`release/FINAL_EXTERNAL_ACTIONS.md`](../../release/FINAL_EXTERNAL_ACTIONS.md) are finished (live legal hosting, upload signing, device QA evidence, Console upload).

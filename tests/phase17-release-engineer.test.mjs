@@ -36,12 +36,12 @@ test('DownloadManager cleans partial files on cancel', () => {
   assert.match(src, /availableDiskSpace/);
 });
 
-test('Package version is 1.9.3', () => {
+test('Package version is 1.0.0', () => {
   const pkg = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
   const app = JSON.parse(fs.readFileSync(path.join(root, 'app.json'), 'utf8'));
-  assert.equal(pkg.version, '1.9.3');
-  assert.equal(app.expo.version, '1.9.3');
-  assert.equal(app.expo.android.versionCode, 16);
+  assert.equal(pkg.version, '1.0.0');
+  assert.equal(app.expo.version, '1.0.0');
+  assert.equal(app.expo.android.versionCode, 17);
 });
 
 test('No invented catalog sha256 fields', () => {

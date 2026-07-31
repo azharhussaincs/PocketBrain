@@ -1,48 +1,41 @@
 # Final Release Certification — PocketBrain
 
 **Date:** 2026-07-31  
-**Version:** **1.9.3** / Android `versionCode` **16**
+**Version:** **1.0.0** / Android `versionCode` **17**
 
 ---
 
 ## Statement
 
 > **Repository: 100% Complete (Project Scope)**  
-> **Overall Product Release: Awaiting External Execution**
+> **Google Play / live production: NOT 100% — awaiting external execution**
 
-A fresh audit found no remaining **repository-controlled** Critical/High/Medium defects after auto-fixes applied this session. Verification gates (`lint`, `test`, `verify:all`) PASS.
+No remaining **repository-controlled** Critical/High/Medium defects block shipping the agreed offline-first scope. Verification gates (`lint`, `test`, `verify:all`) are the authority for repo health.
 
-The **entire product** is **not** 100% complete until external steps are performed and verified.
-
----
-
-## Repository ✅
-
-Feature freeze · offline-first scope · honesty gates · signing plugin · legal HTML sources · Play asset drafts · automation · engineering quality for agreed scope.
+**Nobody can honestly mark Google Play 100% from inside this git repo alone.** Live legal URLs, upload signing, Console forms, and formal device QA evidence are operator actions.
 
 ---
 
-## External ⚠ / ❌
+## Repository ✅ (100%)
+
+Feature freeze · offline-first scope · honesty gates · signing plugin · legal HTML sources + deploy pack (`store/legal/site/`) · Play asset drafts + phone screenshots · automation · engineering quality for agreed scope · product version **1.0.0**.
+
+---
+
+## External ⚠ / ❌ (blocks Play 100%)
 
 | Task | Status |
 | --- | --- |
-| Host static legal HTML (fix SPA redirect) | ❌ Blocked (live SPA) |
-| Signing credentials | ❌ Absent here |
-| Signed production AAB | ❌ Not built |
-| Physical device QA | ❌ Not run |
-| Real screenshots | ❌ 0 PNGs |
-| Play Console + Internal Testing | ❌ Not started |
+| Host static legal HTML (fix SPA redirect on pocketbrain.app) | ❌ You must deploy `store/legal/site/` |
+| Play upload signing credentials (EAS / upload keystore) | ❌ Operator |
+| Signed production AAB | ❌ Not built for Play |
+| Physical device QA matrix signed off | ❌ Operator |
+| Play Console + Internal Testing upload | ❌ Not started |
 
-Guides: `LEGAL_HOSTING_RECOVERY.md`, `FINAL_EXTERNAL_ACTIONS.md`, `EXTERNAL_VALIDATION_PLAN.md`.
+Guides: `FINAL_EXTERNAL_ACTIONS.md`, `LEGAL_DEPLOYMENT_GUIDE.md`, `store/legal/site/README.md`.
 
 ---
 
 ## Do not invent
 
-Hosting success · device QA · screenshots · Play approval · raised overall completion to 100%.
-
----
-
-## Lifecycle
-
-No further development phases are required for repository readiness. Treat PocketBrain as a **shipping product** blocked only on real-world execution.
+Hosting success · Play approval · “overall product 100%” while external Critical items remain open.

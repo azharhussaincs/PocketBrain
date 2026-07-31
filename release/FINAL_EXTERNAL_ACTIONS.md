@@ -39,7 +39,7 @@ eas build -p android --profile production
 # or local bundleRelease per APP_SIGNING.md
 ```
 
-Confirm version **1.9.3** / versionCode **16** (or bump intentionally for a new upload).
+Confirm version **1.0.0** / versionCode **17** (or bump intentionally for a new upload).
 
 ---
 
