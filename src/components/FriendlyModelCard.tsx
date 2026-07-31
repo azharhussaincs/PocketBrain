@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { Button, Chip, Text, useTheme } from 'react-native-paper';
 import type { FriendlyModelCardData } from '../discover/recommendations';
+import { useModelDownloadProgress } from '../hooks/useModelDownloadProgress';
+import { DownloadProgressBlock } from './DownloadProgressBlock';
 
 interface Props {
   model: FriendlyModelCardData;
@@ -34,10 +36,20 @@ export function FriendlyModelCard({
 }: Props) {
   const theme = useTheme();
   const [expanded, setExpanded] = useState(Boolean(showTechnical));
+  const progress = useModelDownloadProgress(model.id);
+  const downloading = Boolean(progress) || busy;
 
   const badges = simple
     ? model.badges.filter((b) => PRIMARY_BADGES.has(b)).slice(0, 3)
     : model.badges;
+
+  const buttonLabel = progress
+    ? progress.percent != null
+      ? `${progress.percent}%`
+      : progress.job.state === 'verifying'
+        ? 'Checking…'
+        : 'Downloading…'
+    : (primaryLabel ?? (model.installed ? 'Open' : 'Download'));
 
   return (
     <Pressable
@@ -81,17 +93,20 @@ export function FriendlyModelCard({
         </View>
       )}
 
+      {progress ? <DownloadProgressBlock progress={progress} /> : null}
+
       <View style={styles.actions}>
         {onPrimary ? (
           <Button
             mode="contained"
-            loading={busy}
+            loading={downloading && !progress}
+            disabled={Boolean(progress)}
             onPress={onPrimary}
             style={styles.primaryBtn}
             contentStyle={styles.primaryBtnContent}
             icon={model.installed ? 'check' : 'download'}
           >
-            {primaryLabel ?? (model.installed ? 'Open' : 'Download')}
+            {buttonLabel}
           </Button>
         ) : null}
         <Button compact mode="text" onPress={() => setExpanded((v) => !v)}>

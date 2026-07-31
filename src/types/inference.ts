@@ -8,6 +8,8 @@ export interface InferenceRequest {
   stop?: string[];
   modelPath: string;
   modelId: string;
+  /** When true, `prompt` is used as-is (already includes turn markers). */
+  rawPrompt?: boolean;
 }
 
 export interface InferenceToken {

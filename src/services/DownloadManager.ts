@@ -20,7 +20,7 @@ const MAX_CONCURRENT = 2;
 
 /** Browser-like UA helps some CDNs; avoid empty/malformed Authorization that HF rejects. */
 const DOWNLOAD_HEADERS: Record<string, string> = {
-  'User-Agent': 'PocketBrain/1.0.0 (Android; expo-file-system)',
+  'User-Agent': 'PocketBrain/1.0.1 (Android; expo-file-system)',
   Accept: '*/*',
 };
 

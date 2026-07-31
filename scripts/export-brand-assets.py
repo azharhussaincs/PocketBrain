@@ -29,77 +29,55 @@ def save(im: Image.Image, path: Path) -> None:
 
 
 def draw_mark(size: int, *, fill=TEAL, stroke=STROKE, node=NODE, bg=None) -> Image.Image:
-    """Clear pocket silhouette + simple neural nodes (readable at 48dp)."""
+    """Bold pocket + PB monogram — readable at 48dp launcher size."""
     im = Image.new("RGBA", (size, size), bg if bg is not None else (0, 0, 0, 0))
     d = ImageDraw.Draw(im)
-    pad = int(size * 0.094)
+    pad = int(size * 0.06)
     box = [pad, pad, size - pad, size - pad]
-    radius = int(size * 0.22)
+    radius = int(size * 0.24)
     d.rounded_rectangle(box, radius=radius, fill=fill)
 
-    # Soft top highlight (subtle, no triangle artifacts)
+    # Soft highlight
     highlight = Image.new("RGBA", (size, size), (0, 0, 0, 0))
     hd = ImageDraw.Draw(highlight)
     hd.ellipse(
-        [int(size * 0.12), int(size * 0.08), int(size * 0.88), int(size * 0.42)],
-        fill=(255, 255, 255, 36),
+        [int(size * 0.10), int(size * 0.06), int(size * 0.90), int(size * 0.40)],
+        fill=(255, 255, 255, 40),
     )
     im = Image.alpha_composite(im, highlight)
     d = ImageDraw.Draw(im)
 
-    # Pocket silhouette — U shape
-    pocket_w = max(3, size // 36)
-    left = int(size * 0.30)
-    right = int(size * 0.70)
-    top = int(size * 0.38)
+    # Pocket U — thicker, simpler
+    pocket_w = max(4, size // 22)
+    left = int(size * 0.28)
+    right = int(size * 0.72)
+    top = int(size * 0.34)
     bottom = int(size * 0.78)
-    # left wall
-    d.line([(left, top), (left, bottom - int(size * 0.08))], fill=stroke, width=pocket_w)
-    # right wall
-    d.line([(right, top), (right, bottom - int(size * 0.08))], fill=stroke, width=pocket_w)
-    # bottom curve
+    d.line([(left, top), (left, bottom - int(size * 0.10))], fill=stroke, width=pocket_w)
+    d.line([(right, top), (right, bottom - int(size * 0.10))], fill=stroke, width=pocket_w)
     d.arc(
-        [left, bottom - int(size * 0.22), right, bottom],
+        [left, bottom - int(size * 0.26), right, bottom + int(size * 0.02)],
         0,
         180,
         fill=stroke,
         width=pocket_w,
     )
-    # flap
+    # Flap
     d.arc(
-        [left, int(size * 0.28), right, int(size * 0.52)],
+        [left, int(size * 0.22), right, int(size * 0.48)],
         200,
         340,
         fill=stroke,
         width=pocket_w,
     )
 
-    # Brain — two lobes + 3 connector arcs (thicker)
-    bw = max(3, size // 30)
-    d.arc(
-        [int(size * 0.34), int(size * 0.44), int(size * 0.66), int(size * 0.64)],
-        200,
-        340,
-        fill=stroke,
-        width=bw,
-    )
-    d.arc(
-        [int(size * 0.32), int(size * 0.52), int(size * 0.68), int(size * 0.74)],
-        20,
-        160,
-        fill=stroke,
-        width=bw,
-    )
-    d.arc(
-        [int(size * 0.38), int(size * 0.54), int(size * 0.62), int(size * 0.64)],
-        200,
-        340,
-        fill=stroke,
-        width=max(2, bw - 1),
-    )
+    # Bold PB letters inside pocket (clear at tiny sizes)
+    f = font(max(18, int(size * 0.28)))
+    d.text((size // 2, int(size * 0.58)), "PB", fill=stroke, font=f, anchor="mm")
 
-    r = max(4, size // 42)
-    for cx, cy in [(0.40, 0.54), (0.60, 0.54), (0.50, 0.64), (0.50, 0.48)]:
+    # Accent nodes
+    r = max(3, size // 48)
+    for cx, cy in [(0.38, 0.46), (0.62, 0.46)]:
         x, y = int(size * cx), int(size * cy)
         d.ellipse([x - r, y - r, x + r, y + r], fill=node)
     return im

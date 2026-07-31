@@ -1,6 +1,6 @@
 # Device QA Checklist — PocketBrain (Phase 14)
 
-**Version under test:** ________ (expect **1.9.3** / `versionCode` **16**)  
+**Version under test:** ________ (expect **1.0.1** / `versionCode` **18**; legacy packaging docs may say 1.9.x)  
 **Build type:** [ ] debug [ ] release [ ] EAS preview [ ] EAS production  
 **Binary source:** [ ] `eas build` artifact [ ] local `bundleRelease`/`assembleRelease` [ ] `expo run:android`  
 **Device:** ________ · **Android API:** ________  

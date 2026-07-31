@@ -1,14 +1,14 @@
 # Final Release Certification — PocketBrain
 
 **Date:** 2026-07-31  
-**Version:** **1.0.0** / Android `versionCode` **17**
+**Version:** **1.0.1** / Android `versionCode` **18**
 
 ---
 
 ## Statement
 
 > **Repository: 100% Complete (Project Scope)**  
-> **Google Play / live production: NOT 100% — awaiting external execution**
+> **Google Play / live production: NOT 100% — Awaiting External Execution**
 
 No remaining **repository-controlled** Critical/High/Medium defects block shipping the agreed offline-first scope. Verification gates (`lint`, `test`, `verify:all`) are the authority for repo health.
 
@@ -18,7 +18,7 @@ No remaining **repository-controlled** Critical/High/Medium defects block shippi
 
 ## Repository ✅ (100%)
 
-Feature freeze · offline-first scope · honesty gates · signing plugin · legal HTML sources + deploy pack (`store/legal/site/`) · Play asset drafts + phone screenshots · automation · engineering quality for agreed scope · product version **1.0.0**.
+Feature freeze · offline-first scope · honesty gates · signing plugin · legal HTML sources + deploy pack (`store/legal/site/`) · Play asset drafts + phone screenshots · automation · engineering quality for agreed scope · product version **1.0.1**.
 
 ---
 

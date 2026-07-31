@@ -17,6 +17,7 @@ import {
   Searchbar,
   Text,
   TextInput,
+  useTheme,
 } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -25,17 +26,22 @@ import { useAppStore } from '../../../store/appStore';
 import { useChatStore } from '../../../store/chatStore';
 import { useSettingsStore } from '../../../store/settingsStore';
 import { aiService } from '../../../services/AIService';
+import { chatOrchestrator } from '../../../services/ChatOrchestrator';
 import { getListingById } from '../../../data/catalog';
 import { ModelRequiredGate } from '../../../components/ModelRequiredGate';
 import { ResponseActions } from '../../../components/ResponseActions';
+import { UniversalComposer } from '../../../components/UniversalComposer';
 import { MarkdownText } from '../../../components/MarkdownText';
 import { EmptyState } from '../../../components/EmptyState';
 import { generatedContentStore } from '../../../files/GeneratedContentStore';
+import type { ChatAttachment } from '../../../types/attachments';
 import type { RootTabParamList } from '../../navigation/types';
+import { formatBytes } from '../../../utils/format';
 
 export function ChatScreen() {
   const navigation = useNavigation<NavigationProp<RootTabParamList>>();
   const insets = useSafeAreaInsets();
+  const theme = useTheme();
   const installed = useAppStore((s) => s.installed);
   const gpuEnabled = useSettingsStore((s) => s.gpuEnabled);
   const nCtx = useSettingsStore((s) => s.defaultContextSize);
@@ -60,6 +66,8 @@ export function ChatScreen() {
   const searchInConversation = useChatStore((s) => s.searchInConversation);
 
   const [draft, setDraft] = useState('');
+  const [attachments, setAttachments] = useState<ChatAttachment[]>([]);
+  const [statusLabel, setStatusLabel] = useState<string | undefined>();
   const [menuOpen, setMenuOpen] = useState(false);
   const [modelMenu, setModelMenu] = useState(false);
   const [sending, setSending] = useState(false);
@@ -68,6 +76,8 @@ export function ChatScreen() {
   const [threadSearch, setThreadSearch] = useState('');
   const [showSearch, setShowSearch] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
+  const sendingLock = useRef(false);
+  const listRef = useRef<FlatList>(null);
 
   const readyModels = useMemo(
     () => installed.filter((m) => m.status === 'installed'),
@@ -104,11 +114,18 @@ export function ChatScreen() {
     return createConversation(modelId);
   };
 
+  const goGet = () => navigation.navigate('MarketplaceTab');
+
   const runGeneration = async (
     conversationId: string,
     prompt: string,
     modelId: string,
+    messageAttachments: ChatAttachment[] = [],
+    historyOverride?: import('../../../types/chat').ChatMessage[],
   ) => {
+    if (sendingLock.current) return;
+    sendingLock.current = true;
+
     const assistantId = appendMessage(conversationId, {
       role: 'assistant',
       content: '',
@@ -119,15 +136,26 @@ export function ChatScreen() {
     const controller = new AbortController();
     abortRef.current = controller;
     setSending(true);
+    setStatusLabel('Starting…');
+
+    const conversation = useChatStore
+      .getState()
+      .conversations.find((c) => c.id === conversationId);
+    const history =
+      historyOverride ??
+      (conversation?.messages.filter((m) => m.id !== assistantId) ?? []);
 
     try {
       let assembled = '';
-      await aiService.generateText({
-        modelId,
+      const result = await chatOrchestrator.send({
         prompt,
+        attachments: messageAttachments,
+        history,
+        modelId,
         gpuEnabled,
         nCtx,
         signal: controller.signal,
+        onStatus: setStatusLabel,
         onToken: ({ token, done }) => {
           if (done) return;
           assembled += token;
@@ -137,29 +165,77 @@ export function ChatScreen() {
           });
         },
       });
+
+      const finalText = (assembled || result.text || '').trim();
       updateMessage(conversationId, assistantId, {
-        content: assembled || 'No response generated.',
+        content: finalText || 'No response generated.',
         streaming: false,
+        workspaceDocumentId: result.workspaceDocumentId,
       });
+
+      if (result.workspaceDocumentId) {
+        Alert.alert('Document created', 'Open it in Workspace to preview, export, and share.', [
+          { text: 'Later', style: 'cancel' },
+          {
+            text: 'Open',
+            onPress: () =>
+              navigation.navigate('WorkspaceTab', {
+                screen: 'DocumentEditor',
+                params: { documentId: result.workspaceDocumentId! },
+              }),
+          },
+        ]);
+      }
     } catch (error) {
+      const message =
+        error instanceof Error ? error.message : 'Generation failed.';
       updateMessage(conversationId, assistantId, {
-        content:
-          error instanceof Error ? error.message : 'Generation failed.',
+        content: message,
         streaming: false,
       });
+      Alert.alert('Generation failed', message, [
+        { text: 'OK' },
+        { text: 'Get models', onPress: goGet },
+      ]);
     } finally {
       setSending(false);
+      setStatusLabel(undefined);
       abortRef.current = null;
+      sendingLock.current = false;
     }
   };
 
   const onSend = async () => {
+    if (sending || sendingLock.current) return;
+
     const content = draft.trim();
-    if (!content || sending || !selectedModelId) return;
+    const pendingAttachments = [...attachments];
+    const blocked = chatOrchestrator.assertCanSend(
+      content,
+      pendingAttachments,
+      selectedModelId || undefined,
+    );
+    if (blocked) {
+      chatOrchestrator.explainBlocked(blocked, goGet);
+      return;
+    }
+
     const conversationId = ensureConversation(selectedModelId);
+    const userLabel =
+      content ||
+      (pendingAttachments.length
+        ? `Attached: ${pendingAttachments.map((a) => a.name).join(', ')}`
+        : '');
+
     setDraft('');
-    appendMessage(conversationId, { role: 'user', content });
-    await runGeneration(conversationId, content, selectedModelId);
+    setAttachments([]);
+    appendMessage(conversationId, {
+      role: 'user',
+      content: userLabel,
+      attachments: pendingAttachments,
+    });
+    requestAnimationFrame(() => listRef.current?.scrollToEnd({ animated: true }));
+    await runGeneration(conversationId, content, selectedModelId, pendingAttachments);
   };
 
   const regenerate = async (assistantMessageId: string) => {
@@ -167,19 +243,36 @@ export function ChatScreen() {
     const index = active.messages.findIndex((m) => m.id === assistantMessageId);
     if (index < 0) return;
     let userPrompt = '';
+    let userAttachments: ChatAttachment[] = [];
     for (let i = index - 1; i >= 0; i -= 1) {
       if (active.messages[i].role === 'user') {
         userPrompt = active.messages[i].content;
+        userAttachments = active.messages[i].attachments ?? [];
         break;
       }
     }
-    if (!userPrompt) return;
+    if (!userPrompt && !userAttachments.length) return;
     deleteMessage(active.id, assistantMessageId);
-    await runGeneration(active.id, userPrompt, selectedModelId);
+    const history = active.messages.filter((m) => m.id !== assistantMessageId).slice(0, index);
+    await runGeneration(
+      active.id,
+      userPrompt,
+      selectedModelId,
+      userAttachments,
+      history,
+    );
   };
 
   const continueGeneration = async () => {
-    if (!active || sending || !selectedModelId) return;
+    if (!active || sending || !selectedModelId) {
+      if (!selectedModelId) {
+        chatOrchestrator.explainBlocked(
+          'No text model is installed. Download a Text model from Get to continue.',
+          goGet,
+        );
+      }
+      return;
+    }
     const last = [...active.messages].reverse().find((m) => m.role === 'assistant');
     if (!last?.content) return;
     await runGeneration(
@@ -217,252 +310,280 @@ export function ChatScreen() {
     Alert.alert('Exported', 'Chat saved to Files → Chat Exports.');
   };
 
+  const composerPad = Math.max(insets.bottom > 0 ? 4 : 8, 8);
+
   return (
     <ModelRequiredGate capability="chat" title="Chat needs a text model">
       <KeyboardAvoidingView
-        style={styles.flex}
+        style={[styles.flex, { backgroundColor: theme.colors.background }]}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={80}
+        keyboardVerticalOffset={0}
       >
-        <View style={[styles.container, { paddingBottom: Math.max(insets.bottom, 8) }]}>
-          <View style={styles.header}>
-            <View style={styles.headerText}>
-              <Text variant="headlineSmall">Chat</Text>
-              <Text variant="bodySmall" style={styles.muted}>
-                {usingMock
-                  ? 'Demo replies until a model is installed — download one from Models.'
-                  : `On this phone · ${modelLabel}`}
-                {stats
-                  ? ` · ${stats.total} msgs`
-                  : ''}
-              </Text>
-            </View>
-            <Menu
-              visible={modelMenu}
-              onDismiss={() => setModelMenu(false)}
-              anchor={
-                <IconButton
-                  icon="cube-outline"
-                  onPress={() => setModelMenu(true)}
-                  accessibilityLabel="Switch model"
-                />
-              }
-            >
-              {readyModels.map((m) => (
+        <View style={styles.flex}>
+          <View style={[styles.container, styles.messagesPane]}>
+            <View style={styles.header}>
+              <View style={styles.headerText}>
+                <Text variant="headlineSmall">Chat</Text>
+                <Text variant="bodySmall" style={styles.muted} numberOfLines={2}>
+                  {usingMock
+                    ? 'Demo replies until a model is installed — download one from Get.'
+                    : `On this phone · ${modelLabel}`}
+                  {stats ? ` · ${stats.total} msgs` : ''}
+                </Text>
+              </View>
+              <Menu
+                visible={modelMenu}
+                onDismiss={() => setModelMenu(false)}
+                anchor={
+                  <IconButton
+                    icon="package-variant"
+                    onPress={() => setModelMenu(true)}
+                    accessibilityLabel="Switch model"
+                  />
+                }
+              >
+                {readyModels.map((m) => (
+                  <Menu.Item
+                    key={m.listingId}
+                    onPress={() => {
+                      setModelMenu(false);
+                      if (active) setConversationModel(active.id, m.listingId);
+                      else createConversation(m.listingId);
+                    }}
+                    title={m.localName}
+                  />
+                ))}
+              </Menu>
+              <Menu
+                visible={menuOpen}
+                onDismiss={() => setMenuOpen(false)}
+                anchor={
+                  <IconButton
+                    icon="dots-vertical"
+                    onPress={() => setMenuOpen(true)}
+                    accessibilityLabel="Chat options"
+                  />
+                }
+              >
                 <Menu.Item
-                  key={m.listingId}
-                  onPress={() => {
-                    setModelMenu(false);
-                    if (active) setConversationModel(active.id, m.listingId);
-                    else createConversation(m.listingId);
-                  }}
-                  title={m.localName}
-                />
-              ))}
-            </Menu>
-            <Menu
-              visible={menuOpen}
-              onDismiss={() => setMenuOpen(false)}
-              anchor={
-                <IconButton
-                  icon="dots-vertical"
-                  onPress={() => setMenuOpen(true)}
-                  accessibilityLabel="Chat options"
-                />
-              }
-            >
-              <Menu.Item
-                onPress={() => {
-                  setMenuOpen(false);
-                  createConversation(selectedModelId);
-                }}
-                title="New chat"
-              />
-              <Menu.Item
-                onPress={() => {
-                  setMenuOpen(false);
-                  setShowSearch((v) => !v);
-                }}
-                title="Search in chat"
-              />
-              {active ? (
-                <>
-                  <Menu.Item
-                    onPress={() => {
-                      setMenuOpen(false);
-                      setRenameValue(active.title);
-                      setRenameOpen(true);
-                    }}
-                    title="Rename conversation"
-                  />
-                  <Menu.Item
-                    onPress={() => {
-                      setMenuOpen(false);
-                      togglePin(active.id);
-                    }}
-                    title={active.pinned ? 'Unpin' : 'Pin'}
-                  />
-                  <Menu.Item
-                    onPress={() => {
-                      setMenuOpen(false);
-                      toggleFavorite(active.id);
-                    }}
-                    title={active.favorite ? 'Unfavorite' : 'Favorite'}
-                  />
-                  <Menu.Item
-                    onPress={() => {
-                      setMenuOpen(false);
-                      const name = `Folder ${folders.length + 1}`;
-                      const folderId = createFolder(name);
-                      moveToFolder(active.id, folderId);
-                      Alert.alert('Moved', `Chat moved to ${name}.`);
-                    }}
-                    title="Move to new folder"
-                  />
-                  <Menu.Item
-                    onPress={() => {
-                      setMenuOpen(false);
-                      if (!stats || !active) return;
-                      Alert.alert(
-                        'Conversation stats',
-                        `Title: ${active.title}\nMessages: ${stats.total}\nYou: ${stats.userCount}\nAI: ${stats.assistantCount}\nCharacters: ${stats.chars}`,
-                      );
-                    }}
-                    title="Conversation stats"
-                  />
-                  <Menu.Item
-                    onPress={() => {
-                      setMenuOpen(false);
-                      void exportChat();
-                    }}
-                    title="Export chat"
-                  />
-                  <Menu.Item
-                    onPress={() => {
-                      setMenuOpen(false);
-                      deleteConversation(active.id);
-                    }}
-                    title="Delete chat"
-                  />
-                </>
-              ) : null}
-              {conversations.slice(0, 8).map((c) => (
-                <Menu.Item
-                  key={c.id}
                   onPress={() => {
                     setMenuOpen(false);
-                    setActive(c.id);
+                    createConversation(selectedModelId);
                   }}
-                  title={`${c.pinned ? '📌 ' : ''}${c.favorite ? '★ ' : ''}${c.title}`}
+                  title="New chat"
                 />
-              ))}
-            </Menu>
-          </View>
-
-          {showSearch ? (
-            <Searchbar
-              placeholder="Search within conversation"
-              value={threadSearch}
-              onChangeText={setThreadSearch}
-              style={styles.search}
-            />
-          ) : null}
-
-          <FlatList
-            data={visibleMessages}
-            keyExtractor={(item) => item.id}
-            contentContainerStyle={styles.messages}
-            initialNumToRender={12}
-            windowSize={9}
-            maxToRenderPerBatch={8}
-            removeClippedSubviews
-            ListEmptyComponent={
-              <EmptyState
-                title="Ask anything privately"
-                description="Messages stay on this phone. Try: “Summarize this idea in 3 bullets” or “Explain photosynthesis simply”."
-                actionLabel={readyModels.length ? undefined : 'Download a model'}
-                onAction={
-                  readyModels.length
-                    ? undefined
-                    : () => navigation.navigate('MarketplaceTab')
-                }
-              />
-            }
-            renderItem={({ item }) => (
-              <View
-                style={[
-                  styles.bubble,
-                  item.role === 'user' ? styles.userBubble : styles.assistantBubble,
-                ]}
-                accessibilityLabel={`${item.role} message`}
-              >
-                <Text variant="labelSmall" style={styles.role}>
-                  {item.role}
-                  {item.streaming ? ' · streaming' : ''}
-                  {item.favorite ? ' · ★' : ''}
-                  {' · '}
-                  {formatTime(item.createdAt)}
-                </Text>
-                {item.role === 'assistant' && !item.streaming ? (
-                  <MarkdownText content={item.content || '…'} />
-                ) : (
-                  <Text selectable>{item.content || '…'}</Text>
-                )}
-                {item.role === 'assistant' && !item.streaming ? (
-                  <ResponseActions
-                    text={item.content}
-                    title={active?.title ?? 'Chat reply'}
-                    disabled={sending}
-                    favorited={item.favorite}
-                    onFavorite={() =>
-                      active && toggleMessageFavorite(active.id, item.id)
-                    }
-                    onRegenerate={() => void regenerate(item.id)}
-                    onContinue={() => void continueGeneration()}
-                    onEditPrompt={() => editPrompt(item.id)}
-                    onDelete={() => active && deleteMessage(active.id, item.id)}
-                    onOpenInWorkspace={(documentId) =>
-                      navigation.navigate('WorkspaceTab', {
-                        screen: 'DocumentEditor',
-                        params: { documentId },
-                      })
-                    }
-                  />
+                <Menu.Item
+                  onPress={() => {
+                    setMenuOpen(false);
+                    setShowSearch((v) => !v);
+                  }}
+                  title="Search in chat"
+                />
+                {active ? (
+                  <>
+                    <Menu.Item
+                      onPress={() => {
+                        setMenuOpen(false);
+                        setRenameValue(active.title);
+                        setRenameOpen(true);
+                      }}
+                      title="Rename conversation"
+                    />
+                    <Menu.Item
+                      onPress={() => {
+                        setMenuOpen(false);
+                        togglePin(active.id);
+                      }}
+                      title={active.pinned ? 'Unpin' : 'Pin'}
+                    />
+                    <Menu.Item
+                      onPress={() => {
+                        setMenuOpen(false);
+                        toggleFavorite(active.id);
+                      }}
+                      title={active.favorite ? 'Unfavorite' : 'Favorite'}
+                    />
+                    <Menu.Item
+                      onPress={() => {
+                        setMenuOpen(false);
+                        const name = `Folder ${folders.length + 1}`;
+                        const folderId = createFolder(name);
+                        moveToFolder(active.id, folderId);
+                        Alert.alert('Moved', `Chat moved to ${name}.`);
+                      }}
+                      title="Move to new folder"
+                    />
+                    <Menu.Item
+                      onPress={() => {
+                        setMenuOpen(false);
+                        if (!stats || !active) return;
+                        Alert.alert(
+                          'Conversation stats',
+                          `Title: ${active.title}\nMessages: ${stats.total}\nYou: ${stats.userCount}\nAI: ${stats.assistantCount}\nCharacters: ${stats.chars}`,
+                        );
+                      }}
+                      title="Conversation stats"
+                    />
+                    <Menu.Item
+                      onPress={() => {
+                        setMenuOpen(false);
+                        void exportChat();
+                      }}
+                      title="Export chat"
+                    />
+                    <Menu.Item
+                      onPress={() => {
+                        setMenuOpen(false);
+                        deleteConversation(active.id);
+                      }}
+                      title="Delete chat"
+                    />
+                  </>
                 ) : null}
-              </View>
-            )}
-          />
+                {conversations.slice(0, 8).map((c) => (
+                  <Menu.Item
+                    key={c.id}
+                    onPress={() => {
+                      setMenuOpen(false);
+                      setActive(c.id);
+                    }}
+                    title={`${c.pinned ? '📌 ' : ''}${c.favorite ? '★ ' : ''}${c.title}`}
+                  />
+                ))}
+              </Menu>
+            </View>
 
-          <View style={styles.composer}>
-            <TextInput
-              mode="outlined"
-              placeholder="Message PocketBrain"
-              value={draft}
-              onChangeText={setDraft}
-              style={styles.input}
-              multiline
-              disabled={sending}
+            {showSearch ? (
+              <Searchbar
+                placeholder="Search within conversation"
+                value={threadSearch}
+                onChangeText={setThreadSearch}
+                style={styles.search}
+              />
+            ) : null}
+
+            <FlatList
+              ref={listRef}
+              style={styles.flex}
+              data={visibleMessages}
+              keyExtractor={(item) => item.id}
+              contentContainerStyle={styles.messages}
+              initialNumToRender={12}
+              windowSize={9}
+              maxToRenderPerBatch={8}
+              removeClippedSubviews
+              keyboardShouldPersistTaps="handled"
+              keyboardDismissMode="interactive"
+              onContentSizeChange={() => {
+                if (sending || visibleMessages.length) {
+                  listRef.current?.scrollToEnd({ animated: true });
+                }
+              }}
+              ListEmptyComponent={
+                <EmptyState
+                  title="Ask anything privately"
+                  description="Attach PDFs, docs, images, or code. Try: “Create a PowerPoint about AI” or “Summarize this file”. Messages stay on this phone."
+                  actionLabel={readyModels.length ? undefined : 'Download a model'}
+                  onAction={
+                    readyModels.length
+                      ? undefined
+                      : () => navigation.navigate('MarketplaceTab')
+                  }
+                />
+              }
+              renderItem={({ item }) => (
+                <View
+                  style={[
+                    styles.bubble,
+                    item.role === 'user' ? styles.userBubble : styles.assistantBubble,
+                  ]}
+                  accessibilityLabel={`${item.role} message`}
+                >
+                  <Text variant="labelSmall" style={styles.role}>
+                    {item.role}
+                    {item.streaming ? ' · streaming' : ''}
+                    {item.favorite ? ' · ★' : ''}
+                    {' · '}
+                    {formatTime(item.createdAt)}
+                  </Text>
+                  {item.attachments?.length ? (
+                    <View style={styles.attachChips}>
+                      {item.attachments.map((a: ChatAttachment) => (
+                        <Text key={a.id} variant="labelSmall" style={styles.attachChip}>
+                          {a.name} · {formatBytes(a.sizeBytes)}
+                        </Text>
+                      ))}
+                    </View>
+                  ) : null}
+                  {item.role === 'assistant' && !item.streaming ? (
+                    <MarkdownText content={item.content || '…'} />
+                  ) : (
+                    <Text selectable>{item.content || '…'}</Text>
+                  )}
+                  {item.role === 'assistant' && item.workspaceDocumentId && !item.streaming ? (
+                    <Button
+                      mode="outlined"
+                      compact
+                      style={{ marginTop: 8 }}
+                      onPress={() =>
+                        navigation.navigate('WorkspaceTab', {
+                          screen: 'DocumentEditor',
+                          params: { documentId: item.workspaceDocumentId! },
+                        })
+                      }
+                    >
+                      Open in Workspace
+                    </Button>
+                  ) : null}
+                  {item.role === 'assistant' && !item.streaming ? (
+                    <ResponseActions
+                      text={item.content}
+                      title={active?.title ?? 'Chat reply'}
+                      disabled={sending}
+                      favorited={item.favorite}
+                      onFavorite={() =>
+                        active && toggleMessageFavorite(active.id, item.id)
+                      }
+                      onRegenerate={() => void regenerate(item.id)}
+                      onContinue={() => void continueGeneration()}
+                      onEditPrompt={() => editPrompt(item.id)}
+                      onDelete={() => active && deleteMessage(active.id, item.id)}
+                      onOpenInWorkspace={(documentId) =>
+                        navigation.navigate('WorkspaceTab', {
+                          screen: 'DocumentEditor',
+                          params: { documentId },
+                        })
+                      }
+                    />
+                  ) : null}
+                </View>
+              )}
             />
-            {sending ? (
-              <Button
-                mode="outlined"
-                accessibilityLabel="Stop generation"
-                onPress={() => abortRef.current?.abort()}
-              >
-                Stop
-              </Button>
-            ) : (
-              <Button
-                mode="contained"
-                accessibilityLabel="Send message"
-                onPress={() => void onSend()}
-                disabled={!draft.trim()}
-              >
-                Send
-              </Button>
-            )}
           </View>
-          {sending ? <ActivityIndicator style={{ marginTop: 8 }} /> : null}
+
+          <View
+            style={[
+              styles.composerDock,
+              {
+                paddingBottom: composerPad,
+                backgroundColor: theme.colors.surface,
+                borderTopColor: theme.colors.outlineVariant ?? theme.colors.outline,
+              },
+            ]}
+          >
+            <UniversalComposer
+              draft={draft}
+              onChangeDraft={setDraft}
+              attachments={attachments}
+              onChangeAttachments={setAttachments}
+              sending={sending}
+              statusLabel={statusLabel}
+              onSend={() => void onSend()}
+              onStop={() => abortRef.current?.abort()}
+              placeholder="Message…"
+            />
+            {sending ? <ActivityIndicator style={{ marginTop: 8 }} /> : null}
+          </View>
         </View>
 
         <Portal>
@@ -491,13 +612,13 @@ export function ChatScreen() {
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  container: { flex: 1, paddingHorizontal: 16, paddingTop: 8 },
+  container: { paddingHorizontal: 16, paddingTop: 8 },
+  messagesPane: { flex: 1, minHeight: 0 },
   header: { flexDirection: 'row', alignItems: 'center' },
-  headerText: { flex: 1 },
+  headerText: { flex: 1, minWidth: 0 },
   muted: { opacity: 0.7 },
   search: { marginBottom: 8 },
-  messages: { paddingVertical: 12, paddingBottom: 24 },
-  empty: { marginTop: 48, gap: 8 },
+  messages: { paddingVertical: 12, paddingBottom: 24, flexGrow: 1 },
   bubble: {
     borderRadius: 16,
     padding: 12,
@@ -513,6 +634,16 @@ const styles = StyleSheet.create({
     backgroundColor: '#E2E8F0',
   },
   role: { opacity: 0.6, marginBottom: 4, textTransform: 'uppercase' },
-  composer: { flexDirection: 'row', gap: 8, alignItems: 'flex-end' },
-  input: { flex: 1, maxHeight: 120 },
+  attachChips: { gap: 4, marginBottom: 6 },
+  attachChip: {
+    opacity: 0.75,
+    marginBottom: 2,
+  },
+  composerDock: {
+    paddingHorizontal: 12,
+    paddingTop: 8,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    zIndex: 2,
+    flexShrink: 0,
+  },
 });

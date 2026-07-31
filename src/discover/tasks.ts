@@ -2,6 +2,8 @@ import type { ModelCapability } from '../types/models';
 
 export type TaskId =
   | 'documents'
+  | 'presentation'
+  | 'files'
   | 'study'
   | 'coding'
   | 'image'
@@ -34,17 +36,6 @@ export interface AiTask {
  */
 export const AI_TASKS: AiTask[] = [
   {
-    id: 'chat',
-    title: 'Chat with AI',
-    subtitle: 'Ask questions privately on this device',
-    icon: 'chat-processing-outline',
-    benefit: 'Fast answers without sending chats to the cloud.',
-    capability: 'chat',
-    playgroundMode: 'chat',
-    recommendedModelIds: ['smollm2-135m-instruct-q4', 'smollm2-360m-instruct-q4', 'qwen25-05b-instruct-q4'],
-    beginner: true,
-  },
-  {
     id: 'documents',
     title: 'Write Documents',
     subtitle: 'Resumes, proposals, notes, exports',
@@ -54,6 +45,18 @@ export const AI_TASKS: AiTask[] = [
     playgroundMode: 'documents',
     workspaceType: 'document',
     recommendedModelIds: ['smollm2-360m-instruct-q4', 'phi-35-mini-q4', 'llama32-1b-instruct-q4'],
+    beginner: true,
+  },
+  {
+    id: 'presentation',
+    title: 'Create Presentation',
+    subtitle: 'AI slides you can export as PPTX',
+    icon: 'projector-screen-outline',
+    benefit: 'Generate a real PowerPoint from a topic, then export and share.',
+    capability: 'documents',
+    playgroundMode: 'documents',
+    workspaceType: 'presentation',
+    recommendedModelIds: ['smollm2-360m-instruct-q4', 'qwen25-05b-instruct-q4'],
     beginner: true,
   },
   {
@@ -68,6 +71,16 @@ export const AI_TASKS: AiTask[] = [
     beginner: true,
   },
   {
+    id: 'files',
+    title: 'My Files',
+    subtitle: 'Documents, exports, and AI outputs',
+    icon: 'folder-outline',
+    benefit: 'Browse, preview, share, and reopen everything saved on this phone.',
+    capability: 'system',
+    recommendedModelIds: [],
+    beginner: true,
+  },
+  {
     id: 'coding',
     title: 'Coding Assistant',
     subtitle: 'Write and explain code offline',
@@ -79,7 +92,7 @@ export const AI_TASKS: AiTask[] = [
   },
   {
     id: 'image',
-    title: 'Image Creator',
+    title: 'Create Image',
     subtitle: 'Text-to-image when a diffusion runtime is linked',
     icon: 'image-outline',
     benefit: 'Guided setup for on-device image generation models.',
@@ -89,8 +102,8 @@ export const AI_TASKS: AiTask[] = [
   },
   {
     id: 'vision',
-    title: 'Image Understanding (Limited)',
-    subtitle: 'Experimental path — pixels not loaded into GGUF yet',
+    title: 'Analyze Image',
+    subtitle: 'Limited — pixels not loaded into GGUF yet',
     icon: 'eye-outline',
     benefit:
       'Install a vision-tagged model to open the limited Vision tool. This build does not pass image pixels into the runtime.',
@@ -100,8 +113,8 @@ export const AI_TASKS: AiTask[] = [
   },
   {
     id: 'speech',
-    title: 'Speech Recognition',
-    subtitle: 'Turn speech into text on-device',
+    title: 'Voice / Speech',
+    subtitle: 'Speech-to-text on this device',
     icon: 'microphone-outline',
     benefit: 'Prefer on-device recognition; mic only when you listen.',
     capability: 'speech',
@@ -111,8 +124,8 @@ export const AI_TASKS: AiTask[] = [
   },
   {
     id: 'voice',
-    title: 'Voice Assistant',
-    subtitle: 'Speak AI replies with device voices',
+    title: 'Hear replies',
+    subtitle: 'Text-to-speech with device voices',
     icon: 'volume-high',
     benefit: 'Hear responses using system text-to-speech.',
     capability: 'tts',
@@ -143,7 +156,7 @@ export const AI_TASKS: AiTask[] = [
   },
   {
     id: 'spreadsheet',
-    title: 'Spreadsheet Assistant',
+    title: 'Spreadsheets',
     subtitle: 'Budgets, invoices, tables',
     icon: 'table',
     benefit: 'Generate sheets and export CSV/XLSX.',
@@ -153,11 +166,22 @@ export const AI_TASKS: AiTask[] = [
     recommendedModelIds: ['smollm2-360m-instruct-q4', 'qwen25-05b-instruct-q4'],
   },
   {
+    id: 'chat',
+    title: 'Chat',
+    subtitle: 'Ask questions privately on this device',
+    icon: 'chat-processing-outline',
+    benefit: 'Fast answers without sending chats to the cloud. Attach files in the composer.',
+    capability: 'chat',
+    playgroundMode: 'chat',
+    recommendedModelIds: ['smollm2-135m-instruct-q4', 'smollm2-360m-instruct-q4', 'qwen25-05b-instruct-q4'],
+    beginner: true,
+  },
+  {
     id: 'video',
-    title: 'Video AI',
-    subtitle: 'Experimental — coming in a later phase',
+    title: 'Video',
+    subtitle: 'Not supported on this runtime yet',
     icon: 'movie-open-outline',
-    benefit: 'Hardware-gated video tools are not enabled yet.',
+    benefit: 'Honestly blocked until a compatible local video model/runtime ships.',
     capability: 'system',
     recommendedModelIds: [],
     experimental: true,

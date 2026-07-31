@@ -26,6 +26,8 @@ export class AIService {
     gpuEnabled?: boolean;
     nCtx?: number;
     nThreads?: number;
+    /** When true, prompt already includes conversation turns. */
+    rawPrompt?: boolean;
     onToken?: (token: InferenceToken) => void;
     signal?: AbortSignal;
   }): Promise<InferenceResult> {
@@ -105,6 +107,7 @@ export class AIService {
         temperature: options.temperature,
         modelPath,
         modelId: options.modelId,
+        rawPrompt: options.rawPrompt,
       },
       options.onToken,
       options.signal,

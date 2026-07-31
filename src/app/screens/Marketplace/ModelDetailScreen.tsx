@@ -8,6 +8,8 @@ import { useAppStore } from '../../../store/appStore';
 import { useSettingsStore } from '../../../store/settingsStore';
 import { modelManager } from '../../../services/ModelManager';
 import { canInstallModel } from '../../../services/HardwareService';
+import { useModelDownloadProgress } from '../../../hooks/useModelDownloadProgress';
+import { DownloadProgressBlock } from '../../../components/DownloadProgressBlock';
 import type { MarketplaceStackParamList } from '../../navigation/types';
 
 type Props = NativeStackScreenProps<MarketplaceStackParamList, 'ModelDetail'>;
@@ -18,6 +20,7 @@ export function ModelDetailScreen({ route, navigation }: Props) {
   const installed = useAppStore((s) => s.installed);
   const wifiOnly = useSettingsStore((s) => s.wifiOnlyDownloads);
   const [busy, setBusy] = useState(false);
+  const progress = useModelDownloadProgress(model?.id);
 
   const record = useMemo(
     () => installed.find((m) => m.listingId === route.params.modelId),
@@ -42,7 +45,17 @@ export function ModelDetailScreen({ route, navigation }: Props) {
     try {
       setBusy(true);
       await modelManager.downloadAndInstall(model, wifiOnly);
-      Alert.alert('Installed', `${model.name} is ready for offline use.`);
+      Alert.alert(
+        'Download complete',
+        `${model.name} is installed. You can use it offline in Chat.`,
+        [
+          { text: 'OK', style: 'cancel' },
+          {
+            text: 'Open Chat',
+            onPress: () => navigation.getParent()?.navigate('ChatTab'),
+          },
+        ],
+      );
     } catch (error) {
       Alert.alert('Download failed', error instanceof Error ? error.message : 'Unknown error');
     } finally {
@@ -124,6 +137,8 @@ export function ModelDetailScreen({ route, navigation }: Props) {
         <Text style={styles.warn}>{compatibility.reasons.join('\n')}</Text>
       ) : null}
 
+      {progress ? <DownloadProgressBlock progress={progress} /> : null}
+
       <View style={styles.actions}>
         {record?.status === 'installed' ? (
           <>
@@ -148,8 +163,8 @@ export function ModelDetailScreen({ route, navigation }: Props) {
             </Button>
           </>
         ) : (
-          <Button mode="contained" loading={busy} onPress={download}>
-            Download for offline use
+          <Button mode="contained" loading={busy && !progress} disabled={Boolean(progress)} onPress={download}>
+            {progress?.percent != null ? `Downloading ${progress.percent}%` : 'Download for offline use'}
           </Button>
         )}
       </View>

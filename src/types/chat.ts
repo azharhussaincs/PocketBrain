@@ -1,3 +1,5 @@
+import type { ChatAttachment } from './attachments';
+
 export type ChatRole = 'system' | 'user' | 'assistant';
 
 export interface ChatMessage {
@@ -8,6 +10,8 @@ export interface ChatMessage {
   modelId?: string;
   streaming?: boolean;
   favorite?: boolean;
+  attachments?: ChatAttachment[];
+  workspaceDocumentId?: string;
 }
 
 export interface Conversation {

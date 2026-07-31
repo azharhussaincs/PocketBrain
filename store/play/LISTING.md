@@ -69,6 +69,6 @@ Prepare IARC questionnaire for a productivity tool without social UGC feeds. Kee
 
 ## Versioning
 
-- Marketing version: `expo.version` in app.json (currently 1.0.0)
-- Android `versionCode`: 17 (increment on every Play upload)
+- Marketing version: `expo.version` in app.json (currently 1.0.1)
+- Android `versionCode`: 18 (increment on every Play upload)
 - Keep release notes in Play Console and `store/play/RELEASE_NOTES.md`

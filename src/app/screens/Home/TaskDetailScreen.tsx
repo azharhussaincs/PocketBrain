@@ -37,8 +37,8 @@ export function TaskDetailScreen({ route, navigation }: Props) {
         <Text variant="headlineSmall">{task.title}</Text>
         <Text style={styles.body}>{task.benefit}</Text>
         <Text style={styles.body}>
-          Video AI is planned for a later phase and stays disabled until devices meet hardware
-          requirements.
+          This capability stays disabled until a compatible local model and runtime are available on
+          this device. PocketBrain will not invent fake media.
         </Text>
         <Button mode="outlined" onPress={() => navigation.goBack()}>
           Back
@@ -49,13 +49,26 @@ export function TaskDetailScreen({ route, navigation }: Props) {
 
   const openTask = () => {
     const parent = navigation.getParent();
+    if (task.id === 'files') {
+      navigation.navigate('Files');
+      return;
+    }
+    if (task.id === 'chat') {
+      parent?.navigate('ChatTab');
+      return;
+    }
+    if (task.workspaceType) {
+      parent?.navigate('WorkspaceTab', {
+        screen: 'AICreator',
+        params: { type: task.workspaceType },
+      });
+      return;
+    }
     if (task.playgroundMode) {
       parent?.navigate('PlaygroundTab');
-    } else if (task.workspaceType) {
-      parent?.navigate('WorkspaceTab');
-    } else {
-      parent?.navigate('ChatTab');
+      return;
     }
+    parent?.navigate('ChatTab');
   };
 
   const download = async (modelId: string) => {
@@ -101,6 +114,8 @@ export function TaskDetailScreen({ route, navigation }: Props) {
   };
 
   const ready =
+    task.id === 'files' ||
+    task.capability === 'system' ||
     cards.some((c) => c.installed) ||
     task.capability === 'speech' ||
     task.capability === 'tts' ||
@@ -112,6 +127,12 @@ export function TaskDetailScreen({ route, navigation }: Props) {
       <Text variant="bodyLarge" style={styles.body}>
         {task.benefit}
       </Text>
+      {task.id === 'files' ? (
+        <Button mode="contained" onPress={openTask} style={{ marginTop: 16 }}>
+          Open Files
+        </Button>
+      ) : (
+        <>
       <Text variant="titleMedium" style={styles.section}>
         Recommended for your device
       </Text>
@@ -146,6 +167,8 @@ export function TaskDetailScreen({ route, navigation }: Props) {
         </Button>
       ) : (
         <Text style={styles.hint}>Download one recommended model to get started.</Text>
+      )}
+        </>
       )}
     </ScrollView>
   );

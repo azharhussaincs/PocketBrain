@@ -69,15 +69,33 @@ export function FilesScreen({ navigation }: Props) {
       toggleSelect(item.id);
       return;
     }
+
+    const aiActions = [
+      {
+        text: 'Summarize in Chat',
+        onPress: () =>
+          navigation.getParent?.()?.navigate('ChatTab') ??
+          navigation.navigate('ChatTab'),
+      },
+      {
+        text: 'Create PPT from topic',
+        onPress: () =>
+          navigation.getParent?.()?.navigate('WorkspaceTab', {
+            screen: 'AICreator',
+            params: {
+              type: 'presentation',
+              initialPrompt: `Create a professional presentation about: ${item.title}`,
+            },
+          }),
+      },
+    ];
+
     if (item.workspaceDocumentId) {
-      navigation.getParent?.()?.navigate('WorkspaceTab', {
-        screen: 'DocumentEditor',
-        params: { documentId: item.workspaceDocumentId },
-      }) ??
-        navigation.navigate('WorkspaceTab', {
-          screen: 'DocumentEditor',
-          params: { documentId: item.workspaceDocumentId },
-        });
+      Alert.alert(item.title, 'Choose an action', [
+        { text: 'Open', onPress: () => openWorkspace(item.workspaceDocumentId!) },
+        ...aiActions,
+        { text: 'Cancel', style: 'cancel' },
+      ]);
       return;
     }
     if (item.generatedId) {
@@ -101,11 +119,14 @@ export function FilesScreen({ navigation }: Props) {
                   ],
                 },
               });
-              navigation.getParent?.()?.navigate('WorkspaceTab', {
-                screen: 'DocumentEditor',
-                params: { documentId: doc.id },
-              });
+              openWorkspace(doc.id);
             },
+          },
+          {
+            text: 'Ask in Chat',
+            onPress: () =>
+              navigation.getParent?.()?.navigate('ChatTab') ??
+              navigation.navigate('ChatTab'),
           },
           {
             text: 'Share',
@@ -116,8 +137,22 @@ export function FilesScreen({ navigation }: Props) {
       return;
     }
     if (item.path) {
-      Alert.alert(item.title, item.path);
+      Alert.alert(item.title, item.path, [
+        { text: 'OK', style: 'cancel' },
+        ...aiActions,
+      ]);
     }
+  };
+
+  const openWorkspace = (documentId: string) => {
+    navigation.getParent?.()?.navigate('WorkspaceTab', {
+      screen: 'DocumentEditor',
+      params: { documentId },
+    }) ??
+      navigation.navigate('WorkspaceTab', {
+        screen: 'DocumentEditor',
+        params: { documentId },
+      });
   };
 
   const deleteSelected = async () => {

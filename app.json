@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "PocketBrain",
+    "name": "Pocket Brain",
     "slug": "PocketBrain",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "default",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -25,10 +25,11 @@
     },
     "android": {
       "package": "com.pocketbrain.app",
-      "versionCode": 17,
+      "versionCode": 18,
       "allowBackup": false,
+      "softwareKeyboardLayoutMode": "resize",
       "adaptiveIcon": {
-        "backgroundColor": "#0F766E",
+        "backgroundColor": "#FFFFFF",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"

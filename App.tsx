@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo } from 'react';
-import { Text as RNText, useColorScheme } from 'react-native';
+import { NativeModules, Text as RNText, useColorScheme } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
 import { NavigationContainer, DarkTheme, DefaultTheme } from '@react-navigation/native';
@@ -22,12 +22,30 @@ const paperText = PaperText as unknown as TextWithDefaults;
 rnText.defaultProps = { ...(rnText.defaultProps ?? {}), maxFontSizeMultiplier: 2 };
 paperText.defaultProps = { ...(paperText.defaultProps ?? {}), maxFontSizeMultiplier: 2 };
 
+/** Turn off Expo Dev Client floating Tools gear (duplicate of Settings tab for users). */
+function disableExpoToolsFab() {
+  if (!__DEV__) return;
+  try {
+    const prefs = NativeModules.DevMenuPreferences as
+      | { setSettings?: (s: Record<string, unknown>) => void }
+      | undefined;
+    prefs?.setSettings?.({
+      showFloatingActionButton: false,
+      showsAtLaunch: false,
+      isOnboardingFinished: true,
+    });
+  } catch {
+    // Best-effort; also disabled via AndroidManifest meta-data.
+  }
+}
+
 export default function App() {
   const systemScheme = useColorScheme();
   const themeMode = useSettingsStore((s) => s.theme);
   const bootstrap = useAppStore((s) => s.bootstrap);
 
   useEffect(() => {
+    disableExpoToolsFab();
     void (async () => {
       await downloadManager.hydrate();
       await bootstrap();

@@ -106,7 +106,7 @@ export function HomeScreen({ navigation }: Props) {
           </Text>
           <Text variant="bodyMedium" style={styles.heroBody}>
             1) Download a small starter model{'\n'}
-            2) Open Chat and ask anything
+            2) Chat, write docs, or create slides — attach files anytime
           </Text>
           <Text variant="bodySmall" style={styles.heroHint}>
             Works offline after download · Wi‑Fi or mobile data

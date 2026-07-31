@@ -38,8 +38,11 @@ export function BrandLogo({
           <Text
             variant={compact ? 'titleLarge' : 'headlineSmall'}
             style={[styles.wordmark, { color: theme.colors.primary }]}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.85}
           >
-            PocketBrain
+            Pocket Brain
           </Text>
           {tagline ? (
             <Text variant="bodyMedium" style={styles.tagline} numberOfLines={2}>

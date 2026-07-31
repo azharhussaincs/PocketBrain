@@ -84,7 +84,7 @@ function MarketplaceStackNavigator() {
       <MarketplaceStack.Screen
         name="MarketplaceHome"
         component={MarketplaceScreen}
-        options={{ title: 'Get models' }}
+        options={{ title: 'Get models', headerShown: false }}
       />
       <MarketplaceStack.Screen
         name="ModelDetail"
@@ -192,7 +192,9 @@ export function RootNavigator() {
           route.name !== 'MarketplaceTab' &&
           route.name !== 'WorkspaceTab' &&
           route.name !== 'SettingsTab' &&
-          route.name !== 'HomeTab',
+          route.name !== 'HomeTab' &&
+          route.name !== 'ChatTab' &&
+          route.name !== 'ModelsTab',
         tabBarActiveTintColor: theme.colors.primary,
         tabBarInactiveTintColor: theme.colors.outline,
         tabBarHideOnKeyboard: true,
@@ -204,7 +206,7 @@ export function RootNavigator() {
             HomeTab: { outline: 'home-outline', filled: 'home' },
             MarketplaceTab: { outline: 'storefront-outline', filled: 'storefront' },
             WorkspaceTab: { outline: 'briefcase-outline', filled: 'briefcase' },
-            ModelsTab: { outline: 'cube-outline', filled: 'cube' },
+            ModelsTab: { outline: 'package-variant-closed', filled: 'package-variant' },
             DownloadsTab: { outline: 'download-outline', filled: 'download' },
             ChatTab: { outline: 'chat-processing-outline', filled: 'chat-processing' },
             PlaygroundTab: { outline: 'flask-outline', filled: 'flask' },
@@ -223,9 +225,10 @@ export function RootNavigator() {
         tabBarStyle: {
           backgroundColor: theme.colors.surface,
           borderTopColor: theme.colors.outlineVariant ?? theme.colors.outline,
-          minHeight: 60,
-          paddingBottom: 4,
-          paddingTop: 4,
+          height: 64,
+          paddingBottom: 8,
+          paddingTop: 6,
+          elevation: 8,
         },
       })}
     >

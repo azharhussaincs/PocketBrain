@@ -103,7 +103,9 @@ export class LlamaCppAdapter implements RuntimeAdapter {
       const system = request.systemPrompt
         ? `${request.systemPrompt}\n\n`
         : 'You are PocketBrain, a private on-device assistant. Stay helpful and concise.\n\n';
-      const prompt = `${system}User: ${request.prompt}\nAssistant:`;
+      const prompt = request.rawPrompt
+        ? `${system}${request.prompt}`
+        : `${system}User: ${request.prompt}\nAssistant:`;
 
       const result = await ctx.completion(
         {
