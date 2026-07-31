@@ -43,33 +43,34 @@
 ## Table of contents
 
 1. [Project overview](#1-project-overview)
-2. [Features](#2-features)
-3. [Technology stack](#3-technology-stack)
-4. [Requirements](#4-requirements)
-5. [Installation](#5-installation)
-6. [Project setup](#6-project-setup)
-7. [Running the project](#7-running-the-project)
-8. [Building release artifacts](#8-building-release-artifacts)
-9. [Folder structure](#9-folder-structure)
-10. [Important files](#10-important-files)
-11. [npm scripts](#11-npm-scripts)
-12. [Architecture](#12-architecture)
-13. [AI model system](#13-ai-model-system)
-14. [User workflow](#14-user-workflow)
-15. [Export system](#15-export-system)
-16. [Storage](#16-storage)
-17. [Security & privacy](#17-security--privacy)
-18. [Testing](#18-testing)
-19. [Google Play release guide](#19-google-play-release-guide)
-20. [Troubleshooting](#20-troubleshooting)
-21. [FAQ](#21-faq)
-22. [Known limitations](#22-known-limitations)
-23. [Roadmap](#23-roadmap)
-24. [Contributing](#24-contributing)
-25. [Changelog](#25-changelog)
-26. [License](#26-license)
-27. [Contact](#27-contact)
-28. [Release readiness & completion](#release-readiness-report)
+2. [Developer quick start (step by step)](#2-developer-quick-start-step-by-step)
+3. [Features](#3-features)
+4. [Technology stack](#4-technology-stack)
+5. [Requirements](#5-requirements)
+6. [Installation](#6-installation)
+7. [Project setup](#7-project-setup)
+8. [Running the project](#8-running-the-project)
+9. [Building release artifacts](#9-building-release-artifacts)
+10. [Folder structure](#10-folder-structure)
+11. [Important files](#11-important-files)
+12. [npm scripts](#12-npm-scripts)
+13. [Architecture](#13-architecture)
+14. [AI model system](#14-ai-model-system)
+15. [User workflow](#15-user-workflow)
+16. [Export system](#16-export-system)
+17. [Storage](#17-storage)
+18. [Security & privacy](#18-security--privacy)
+19. [Testing](#19-testing)
+20. [Google Play release guide](#20-google-play-release-guide)
+21. [Troubleshooting](#21-troubleshooting)
+22. [FAQ](#22-faq)
+23. [Known limitations](#23-known-limitations)
+24. [Roadmap](#24-roadmap)
+25. [Contributing](#25-contributing)
+26. [Changelog](#26-changelog)
+27. [License](#27-license)
+28. [Contact](#28-contact)
+29. [Release readiness & completion](#release-readiness-report)
 
 ---
 
@@ -133,7 +134,186 @@ Images/audio/video as first-class Workspace exporters are **not** full productio
 
 ---
 
-## 2. Features
+## 2. Developer quick start (step by step)
+
+Use this path when another developer clones PocketBrain for the first time. Detailed notes live in sections 6–9 below.
+
+### Step 0 — What you need on your machine
+
+| Tool | Why |
+| --- | --- |
+| **Git** | Clone the repo |
+| **Node.js LTS** + **npm** | Install JS dependencies and run Expo/Metro |
+| **JDK 17** (recommended) | Android Gradle builds |
+| **Android Studio** | SDK, emulator, optional Gradle UI |
+| **Android SDK** | `platform-tools`, `build-tools`, platforms **34–36** |
+| Device or emulator | Run / install the app |
+
+Set SDK env vars (Linux example):
+
+```bash
+export ANDROID_HOME="$HOME/Android/Sdk"
+export ANDROID_SDK_ROOT="$ANDROID_HOME"
+export PATH="$PATH:$ANDROID_HOME/platform-tools:$ANDROID_HOME/emulator"
+```
+
+Check:
+
+```bash
+node -v
+npm -v
+adb version
+```
+
+---
+
+### Step 1 — Clone the repository
+
+```bash
+git clone https://github.com/azharhussaincs/PocketBrain.git
+cd PocketBrain
+```
+
+You should see `package.json`, `app.json`, and `src/` in the project root.
+
+---
+
+### Step 2 — Install libraries (dependencies)
+
+```bash
+npm install
+```
+
+This installs Expo SDK **57**, React Native, `llama.rn`, and the rest from `package-lock.json`.
+
+Optional health checks:
+
+```bash
+npm run lint
+npm run typecheck
+npm test
+```
+
+---
+
+### Step 3 — Generate the Android native project
+
+Native modules (`llama.rn`, OCR, speech, etc.) need a real Android project:
+
+```bash
+npx expo prebuild --platform android
+```
+
+This creates/updates the **`android/`** folder (often gitignored — regenerate after clone or plugin changes).
+
+---
+
+### Step 4 — Run on a local Android emulator (Android Studio)
+
+1. Open **Android Studio** → **Device Manager** → create/start a virtual device (API **34+**, prefer **arm64** image if available; x86_64 works for UI but is emulator-only).
+2. Confirm the emulator is visible:
+
+```bash
+adb devices
+```
+
+3. Build, install, and launch from the repo root:
+
+```bash
+npm run android
+# same as: npx expo run:android
+```
+
+Metro starts automatically. For Metro alone (already-installed debug app):
+
+```bash
+npm start
+```
+
+Then press `a` in the terminal, or reload the app on the emulator.
+
+> **Note:** Expo Go is **not** enough for real GGUF chat. Always use this native run path for production-like behavior.
+
+---
+
+### Step 5 — Run on a USB-connected phone (optional)
+
+1. On the phone: enable **Developer options** → **USB debugging**.
+2. Plug in USB; accept the debugging prompt.
+3. Check `adb devices` shows the phone.
+4. Run:
+
+```bash
+npm run android
+```
+
+---
+
+### Step 6 — Build an APK to copy to a real phone (no USB / WhatsApp share)
+
+For a **phone-installable** APK you must target **arm64-v8a** (not emulator `x86_64`).
+
+#### 6a. Debug APK (fast local test)
+
+```bash
+cd android
+./gradlew app:assembleDebug -PreactNativeArchitectures=arm64-v8a
+```
+
+Output (typical):
+
+`android/app/build/outputs/apk/debug/app-debug.apk`
+
+Copy that file to the phone and open it (allow **Install unknown apps** for Files/WhatsApp).
+
+#### 6b. Release APK (signed, closer to production)
+
+Release signing needs `android/keystore.properties` or `PB_UPLOAD_*` env vars (see [`release/APP_SIGNING.md`](release/APP_SIGNING.md)). With credentials configured:
+
+```bash
+cd android
+./gradlew app:assembleRelease -PreactNativeArchitectures=arm64-v8a
+```
+
+Output (typical):
+
+`android/app/build/outputs/apk/release/app-release.apk`
+
+Copy/share that APK to the phone, install, then:
+
+1. Finish onboarding (Privacy → Terms → AI disclaimer)
+2. Open **Get** → download a small model (Wi‑Fi or mobile data)
+3. Open **Chat** and ask something
+
+#### 6c. Play Store AAB (later)
+
+```bash
+cd android
+./gradlew bundleRelease
+# or: eas build -p android --profile production
+```
+
+Do **not** upload a debug-signed AAB to Google Play.
+
+---
+
+### Step 7 — Common first-run checklist
+
+| Check | Command / action |
+| --- | --- |
+| Dependencies installed | `npm install` finished without errors |
+| Native project present | `android/` exists after prebuild |
+| Emulator or device online | `adb devices` lists a device |
+| App launches | Home shows PocketBrain brand + tasks |
+| Real AI (not mock) | Native build + model downloaded from **Get** |
+| Phone APK architecture | Prefer **arm64-v8a** for physical devices |
+
+### If something fails
+
+See [§21 Troubleshooting](#21-troubleshooting). Typical fixes: re-run `npx expo prebuild -p android`, use JDK 17, free RAM before Gradle + emulator, and never install an `x86_64`-only APK on a normal phone.
+
+
+## 3. Features
 
 ### AI & chat
 
@@ -187,7 +367,7 @@ Primary tabs: **Home · Get · Chat · Mine · Settings**. Workspace / Downloads
 
 ---
 
-## 3. Technology stack
+## 4. Technology stack
 
 ### Runtime & UI
 
@@ -245,7 +425,7 @@ Primary tabs: **Home · Get · Chat · Mine · Settings**. Workspace / Downloads
 
 ---
 
-## 4. Requirements
+## 5. Requirements
 
 ### Developer machine (minimum)
 
@@ -274,7 +454,7 @@ Primary tabs: **Home · Get · Chat · Mine · Settings**. Workspace / Downloads
 
 ---
 
-## 5. Installation
+## 6. Installation
 
 From scratch:
 
@@ -307,7 +487,7 @@ npm run export:brand
 
 ---
 
-## 6. Project setup
+## 7. Project setup
 
 ### Environment
 
@@ -344,7 +524,7 @@ Requires macOS + Xcode. `ios.deploymentTarget` is **16.4**. The repo may not con
 
 ---
 
-## 7. Running the project
+## 8. Running the project
 
 ### Development Metro
 
@@ -381,7 +561,7 @@ npm run android
 
 ---
 
-## 8. Building release artifacts
+## 9. Building release artifacts
 
 ### EAS profiles (`eas.json`)
 
@@ -420,7 +600,7 @@ Verified in Final Verification: Android bundle of **1882 modules** succeeded.
 
 ---
 
-## 9. Folder structure
+## 10. Folder structure
 
 ```
 PocketBrain/
@@ -559,7 +739,7 @@ Generated by Expo prebuild. Treat as **build outputs** unless you intentionally 
 
 ---
 
-## 10. Important files
+## 11. Important files
 
 | File | Role |
 | --- | --- |
@@ -579,7 +759,7 @@ There is **no** committed `expo-env.d.ts` required for day-to-day builds; Expo m
 
 ---
 
-## 11. npm scripts
+## 12. npm scripts
 
 | Script | Command | Purpose | Expected result |
 | --- | --- | --- | --- |
@@ -605,7 +785,7 @@ There is **no** committed `expo-env.d.ts` required for day-to-day builds; Expo m
 
 ---
 
-## 12. Architecture
+## 13. Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -649,7 +829,7 @@ There is **no** committed `expo-env.d.ts` required for day-to-day builds; Expo m
 
 ---
 
-## 13. AI model system
+## 14. AI model system
 
 ### Lifecycle
 
@@ -675,7 +855,7 @@ Model binaries live under app sandbox paths managed by Expo FileSystem (via Mode
 
 ---
 
-## 14. User workflow
+## 15. User workflow
 
 ```
 Install app
@@ -697,7 +877,7 @@ Minimum path: **Get → Download small model → Chat**.
 
 ---
 
-## 15. Export system
+## 16. Export system
 
 | Format | Module path | Notes |
 | --- | --- | --- |
@@ -713,7 +893,7 @@ Default formats per document type are chosen in `WorkspaceService.defaultExportF
 
 ---
 
-## 16. Storage
+## 17. Storage
 
 | Area | Responsibility |
 | --- | --- |
@@ -728,7 +908,7 @@ Default formats per document type are chosen in `WorkspaceService.defaultExportF
 
 ---
 
-## 17. Security & privacy
+## 18. Security & privacy
 
 | Topic | PocketBrain behavior |
 | --- | --- |
@@ -745,7 +925,7 @@ Details: [`release/DATA_SAFETY.md`](release/DATA_SAFETY.md), [`release/PERMISSIO
 
 ---
 
-## 18. Testing
+## 19. Testing
 
 ### Automated
 
@@ -774,7 +954,7 @@ Use [`release/TEST_REPORT.md`](release/TEST_REPORT.md) and [`release/FINAL_QA_RE
 
 ---
 
-## 19. Google Play release guide
+## 20. Google Play release guide
 
 Master Console pack: [`release/PLAY_STORE_SUBMISSION.md`](release/PLAY_STORE_SUBMISSION.md).  
 Final Play report: [`release/FINAL_PLAYSTORE_REPORT.md`](release/FINAL_PLAYSTORE_REPORT.md).
@@ -813,7 +993,7 @@ These are **operator / external** — the **1.0.0 repository project is complete
 4. Play Console Internal testing upload (screenshots drafts already in-repo)
 ---
 
-## 20. Troubleshooting
+## 21. Troubleshooting
 
 | Symptom | Likely cause | Fix |
 | --- | --- | --- |
@@ -832,7 +1012,7 @@ These are **operator / external** — the **1.0.0 repository project is complete
 
 ---
 
-## 21. FAQ
+## 22. FAQ
 
 1. **Can I use PocketBrain offline?** Yes for core local features after models are installed; downloads need network.
 2. **Do I need an account?** No.
@@ -884,7 +1064,7 @@ These are **operator / external** — the **1.0.0 repository project is complete
 
 ---
 
-## 22. Known limitations
+## 23. Known limitations
 
 Honest list (also [`release/KNOWN_LIMITATIONS.md`](release/KNOWN_LIMITATIONS.md)):
 
@@ -902,7 +1082,7 @@ Honest list (also [`release/KNOWN_LIMITATIONS.md`](release/KNOWN_LIMITATIONS.md)
 
 ---
 
-## 23. Roadmap
+## 24. Roadmap
 
 ### Phase history (high level)
 
@@ -938,7 +1118,7 @@ Version table: [`release/VERSION_HISTORY.md`](release/VERSION_HISTORY.md).
 
 ---
 
-## 24. Contributing
+## 25. Contributing
 
 ### Coding style
 
@@ -970,7 +1150,7 @@ npm run lint && npm run test && npm run verify:release
 
 ---
 
-## 25. Changelog
+## 26. Changelog
 
 ### 1.0.0 — First complete product release
 
@@ -1043,13 +1223,13 @@ Full notes: [`release/CHANGELOG.md`](release/CHANGELOG.md), [`store/play/RELEASE
 
 ---
 
-## 26. License
+## 27. License
 
 This repository includes an **MIT** license file. The checked-in [`LICENSE`](LICENSE) text currently carries the Expo template copyright header (`650 Industries, Inc.`). Treat third-party packages and downloaded model weights under **their own licenses**. In-app license screens summarize major components.
 
 ---
 
-## 27. Contact
+## 28. Contact
 
 | Channel | Value |
 | --- | --- |
