@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 628" role="img" aria-label="Social banner template">
+  <rect width="1200" height="628" fill="#0B1220"/>
+  <rect x="0" y="0" width="16" height="628" fill="#2DD4BF"/>
+  <text x="80" y="250" font-family="system-ui,sans-serif" font-size="56" font-weight="700" fill="#F8FAFC">Keep AI in your pocket.</text>
+  <text x="80" y="320" font-family="system-ui,sans-serif" font-size="28" fill="#94A3B8">Local models. Private chat. No mandatory cloud.</text>
+  <rect x="80" y="400" width="280" height="64" rx="12" fill="#0F766E"/>
+  <text x="220" y="442" text-anchor="middle" font-family="system-ui,sans-serif" font-size="24" font-weight="600" fill="#FFFFFF">PocketBrain</text>
+</svg>

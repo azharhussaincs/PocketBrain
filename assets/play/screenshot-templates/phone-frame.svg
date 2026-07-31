@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Phone frame template  insert real PNG screenshot into the dashed area after device QA -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1920">
+  <rect width="1080" height="1920" fill="#E2E8F0"/>
+  <rect x="90" y="80" width="900" height="1760" rx="64" fill="#0B1220"/>
+  <rect x="120" y="140" width="840" height="1600" rx="24" fill="#F8FAFC" stroke="#0F766E" stroke-width="4" stroke-dasharray="12 10"/>
+  <text x="540" y="900" text-anchor="middle" font-family="system-ui,sans-serif" font-size="40" fill="#64748B">SCREENSHOT SLOT</text>
+  <text x="540" y="960" text-anchor="middle" font-family="system-ui,sans-serif" font-size="28" fill="#94A3B8">Replace with real device capture</text>
+  <text x="540" y="1820" text-anchor="middle" font-family="system-ui,sans-serif" font-size="32" font-weight="600" fill="#0F766E">LABEL</text>
+</svg>

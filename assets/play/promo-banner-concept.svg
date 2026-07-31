@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 628" role="img" aria-label="Promo banner template">
+  <rect width="1200" height="628" fill="#0F766E"/>
+  <text x="80" y="280" font-family="system-ui,sans-serif" font-size="64" font-weight="700" fill="#F0FDFA">PocketBrain</text>
+  <text x="80" y="360" font-family="system-ui,sans-serif" font-size="36" fill="#CCFBF1">Offline AI � Privacy-first � No account</text>
+  <rect x="720" y="120" width="400" height="388" rx="28" fill="#134E4A" stroke="#5EEAD4" stroke-width="2" stroke-dasharray="8 8"/>
+  <text x="920" y="330" text-anchor="middle" font-family="system-ui,sans-serif" font-size="22" fill="#99F6E4">Insert real screenshot</text>
+  <text x="920" y="365" text-anchor="middle" font-family="system-ui,sans-serif" font-size="18" fill="#99F6E4">after device capture</text>
+</svg>

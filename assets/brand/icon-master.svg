@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- PocketBrain mark  editable master (square). Original artwork. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-label="PocketBrain">
+  <defs>
+    <linearGradient id="pbFill" x1="180" y1="180" x2="844" y2="844" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0F766E"/>
+      <stop offset="1" stop-color="#115E59"/>
+    </linearGradient>
+  </defs>
+  <!-- Safe margin: content inside ~66% adaptive zone -->
+  <rect x="96" y="96" width="832" height="832" rx="192" fill="url(#pbFill)"/>
+  <!-- Pocket mouth -->
+  <path d="M288 320c0-52 52-92 120-92h208c68 0 120 40 120 92v28c0 22-16 36-38 36H326c-22 0-38-14-38-36v-28z"
+        fill="#CCFBF1" fill-opacity="0.4"/>
+  <!-- Neural brain -->
+  <g fill="none" stroke="#F0FDFA" stroke-width="28" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M360 500c-36 16-60 56-60 100 0 80 68 140 196 140s196-60 196-140c0-44-24-84-60-100"/>
+    <path d="M360 500c20-68 68-108 136-108s116 40 136 108"/>
+    <path d="M424 572c36-20 108-20 144 0"/>
+    <path d="M400 660c48 20 144 20 192 0"/>
+  </g>
+  <circle cx="404" cy="536" r="18" fill="#5EEAD4"/>
+  <circle cx="620" cy="536" r="18" fill="#5EEAD4"/>
+  <circle cx="512" cy="624" r="18" fill="#5EEAD4"/>
+  <circle cx="512" cy="472" r="18" fill="#5EEAD4"/>
+</svg>

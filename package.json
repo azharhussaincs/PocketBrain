@@ -1,0 +1,88 @@
+{
+  "name": "pocketbrain",
+  "version": "1.9.3",
+  "main": "index.ts",
+  "dependencies": {
+    "@expo/vector-icons": "^15.0.2",
+    "@react-native-async-storage/async-storage": "2.2.0",
+    "@react-navigation/bottom-tabs": "^7.18.14",
+    "@react-navigation/native": "^7.3.14",
+    "@react-navigation/native-stack": "^7.18.6",
+    "base-64": "^1.0.0",
+    "buffer": "^6.0.3",
+    "docx": "^9.7.1",
+    "expo": "~57.0.9",
+    "expo-av": "^16.0.8",
+    "expo-build-properties": "~57.0.8",
+    "expo-clipboard": "~57.0.1",
+    "expo-constants": "~57.0.8",
+    "expo-crypto": "~57.0.1",
+    "expo-dev-client": "~57.0.10",
+    "expo-device": "~57.0.1",
+    "expo-document-picker": "~57.0.1",
+    "expo-file-system": "~57.0.1",
+    "expo-font": "~57.0.1",
+    "expo-image-picker": "~57.0.7",
+    "expo-linking": "~57.0.4",
+    "expo-mlkit-ocr": "^0.2.7",
+    "expo-network": "~57.0.1",
+    "expo-sharing": "~57.0.8",
+    "expo-speech": "~57.0.1",
+    "expo-speech-recognition": "^56.0.1",
+    "expo-splash-screen": "~57.0.5",
+    "expo-status-bar": "~57.0.1",
+    "expo-system-ui": "~57.0.1",
+    "llama.rn": "^0.12.7",
+    "pdf-lib": "^1.17.1",
+    "pptxgenjs": "^4.0.1",
+    "react": "19.2.3",
+    "react-native": "0.86.2",
+    "react-native-gesture-handler": "~2.32.0",
+    "react-native-paper": "^5.15.3",
+    "react-native-reanimated": "4.5.1",
+    "react-native-safe-area-context": "~5.7.0",
+    "react-native-screens": "~4.26.0",
+    "react-native-worklets": "0.10.1",
+    "xlsx": "^0.18.5",
+    "zustand": "^5.0.14"
+  },
+  "devDependencies": {
+    "@types/base-64": "^1.0.2",
+    "@types/react": "~19.2.2",
+    "@types/xlsx": "^0.0.35",
+    "babel-preset-expo": "^57.0.5",
+    "typescript": "~6.0.3"
+  },
+  "scripts": {
+    "start": "expo start",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
+    "typecheck": "tsc --noEmit",
+    "lint": "tsc --noEmit",
+    "prebuild": "expo prebuild",
+    "verify:release": "node scripts/verify-release.mjs",
+    "verify:assets": "node scripts/verify-assets.mjs",
+    "verify:legal": "node scripts/verify-legal.mjs",
+    "verify:branding": "node scripts/verify-branding.mjs",
+    "verify:docs": "node scripts/verify-docs.mjs",
+    "verify:playstore": "node scripts/verify-playstore.mjs",
+    "verify:android": "node scripts/verify-android.mjs",
+    "verify:build": "node scripts/verify-build.mjs",
+    "verify:all": "node scripts/verify-all.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "export:brand": "python3 scripts/export-brand-assets.py",
+    "doctor": "npx expo-doctor"
+  },
+  "private": true,
+  "expo": {
+    "doctor": {
+      "reactNativeDirectoryCheck": {
+        "exclude": [
+          "expo-mlkit-ocr",
+          "expo-av"
+        ],
+        "listUnknownPackages": false
+      }
+    }
+  }
+}

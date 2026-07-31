@@ -1,0 +1,113 @@
+{
+  "expo": {
+    "name": "PocketBrain",
+    "slug": "PocketBrain",
+    "version": "1.9.3",
+    "orientation": "default",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "scheme": "pocketbrain",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0F766E"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.pocketbrain.app",
+      "infoPlist": {
+        "NSSpeechRecognitionUsageDescription": "PocketBrain transcribes speech on-device when you use Speech features. Audio is not uploaded by PocketBrain.",
+        "NSMicrophoneUsageDescription": "Microphone access is used only when you start speech recognition or recording.",
+        "NSCameraUsageDescription": "Camera access is used only when you capture an image for on-device Vision or OCR.",
+        "NSPhotoLibraryUsageDescription": "Photo library access is used only to select images you choose for on-device Vision, OCR, or image tools."
+      }
+    },
+    "android": {
+      "package": "com.pocketbrain.app",
+      "versionCode": 16,
+      "allowBackup": false,
+      "adaptiveIcon": {
+        "backgroundColor": "#0F766E",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "INTERNET",
+        "ACCESS_NETWORK_STATE"
+      ],
+      "blockedPermissions": [
+        "android.permission.SYSTEM_ALERT_WINDOW"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-dev-client",
+      "expo-sharing",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#0F766E",
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 200
+        }
+      ],
+      "expo-system-ui",
+      "expo-font",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "minSdkVersion": 26,
+            "targetSdkVersion": 35,
+            "compileSdkVersion": 35,
+            "largeHeap": true
+          },
+          "ios": {
+            "deploymentTarget": "16.4"
+          }
+        }
+      ],
+      [
+        "expo-speech-recognition",
+        {
+          "microphonePermission": "Allow PocketBrain to use the microphone for on-device speech recognition.",
+          "speechRecognitionPermission": "Allow PocketBrain to recognize speech on-device when you start listening."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow PocketBrain to access photos you select for on-device Vision/OCR.",
+          "cameraPermission": "Allow PocketBrain to use the camera for on-device Vision/OCR captures."
+        }
+      ],
+      [
+        "expo-mlkit-ocr",
+        {
+          "iosEngine": "auto"
+        }
+      ],
+      "expo-av",
+      [
+        "llama.rn",
+        {
+          "enableEntitlements": true,
+          "entitlementsProfile": "production",
+          "forceCxx20": true,
+          "enableOpenCLAndHexagon": true
+        }
+      ],
+      "./plugins/withAndroidReleaseSigning.js"
+    ],
+    "extra": {
+      "supportEmail": "support@pocketbrain.app",
+      "privacyPolicyUrl": "https://pocketbrain.app/privacy",
+      "termsUrl": "https://pocketbrain.app/terms"
+    }
+  }
+}

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 500" role="img" aria-label="PocketBrain feature graphic">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1024" y2="500" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0F766E"/>
+      <stop offset="1" stop-color="#134E4A"/>
+    </linearGradient>
+    <linearGradient id="mark" x1="80" y1="80" x2="320" y2="320" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#14B8A6"/>
+      <stop offset="1" stop-color="#0F766E"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="500" fill="url(#bg)"/>
+  <!-- Soft neural dots (decorative, original) -->
+  <g fill="#5EEAD4" fill-opacity="0.35">
+    <circle cx="820" cy="90" r="4"/><circle cx="880" cy="140" r="3"/>
+    <circle cx="940" cy="80" r="5"/><circle cx="900" cy="220" r="3"/>
+    <circle cx="760" cy="400" r="4"/><circle cx="960" cy="360" r="3"/>
+  </g>
+  <!-- Mark -->
+  <g transform="translate(72,110) scale(0.2734375)">
+    <rect x="96" y="96" width="832" height="832" rx="192" fill="url(#mark)"/>
+    <path d="M288 320c0-52 52-92 120-92h208c68 0 120 40 120 92v28c0 22-16 36-38 36H326c-22 0-38-14-38-36v-28z"
+          fill="#CCFBF1" fill-opacity="0.4"/>
+    <g fill="none" stroke="#F0FDFA" stroke-width="28" stroke-linecap="round">
+      <path d="M360 500c-36 16-60 56-60 100 0 80 68 140 196 140s196-60 196-140c0-44-24-84-60-100"/>
+      <path d="M360 500c20-68 68-108 136-108s116 40 136 108"/>
+    </g>
+    <circle cx="404" cy="536" r="18" fill="#5EEAD4"/>
+    <circle cx="620" cy="536" r="18" fill="#5EEAD4"/>
+    <circle cx="512" cy="472" r="18" fill="#5EEAD4"/>
+  </g>
+  <text x="400" y="230" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif"
+        font-size="72" font-weight="700" fill="#F0FDFA">PocketBrain</text>
+  <text x="400" y="300" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif"
+        font-size="32" font-weight="500" fill="#CCFBF1">Offline AI on your device</text>
+</svg>
