@@ -11,7 +11,7 @@
 
 <p align="center">
   <img alt="version" src="https://img.shields.io/badge/version-1.9.3-0F766E" />
-  <img alt="completion" src="https://img.shields.io/badge/repo_98%25_play_38%25-orange" />
+  <img alt="completion" src="https://img.shields.io/badge/repo_100%25_play_external-0F766E" />
   <img alt="platform" src="https://img.shields.io/badge/platform-Android%20(primary)%20%7C%20iOS%20(prebuild)-informational" />
   <img alt="expo" src="https://img.shields.io/badge/Expo-SDK%2057-000020" />
   <img alt="license" src="https://img.shields.io/badge/license-MIT-blue" />
@@ -24,11 +24,10 @@
 | **Package** | `com.pocketbrain.app` |
 | **App version** | **1.9.3** |
 | **Android `versionCode`** | 16 |
-| **Repository completion** | **98%** |
-| **Production validation** | **22%** |
-| **External readiness** | **32%** |
-| **Google Play readiness** | **38%** |
-| **Play readiness** | ❌ **NOT READY** ([`release/FINAL_RELEASE_CERTIFICATE.md`](release/FINAL_RELEASE_CERTIFICATE.md)) |
+| **Repository completion** | **100%** (project scope — [`release/FINAL_RELEASE_CERTIFICATION.md`](release/FINAL_RELEASE_CERTIFICATION.md)) |
+| **Production validation** | **Awaiting external execution** |
+| **External readiness** | Blocked on legal hosting, signing, device QA, screenshots, Play Console |
+| **Google Play readiness** | ❌ **NOT READY** ([`release/FINAL_RELEASE_CERTIFICATE.md`](release/FINAL_RELEASE_CERTIFICATE.md)) |
 | **License** | MIT ([`LICENSE`](LICENSE)) — template copyright notice from Expo; project code is MIT-licensed |
 | **Support** | `support@pocketbrain.app` |
 | **Privacy URL (configured)** | `https://pocketbrain.app/privacy` (**deploy static HTML** — see [`store/legal/HOSTING.md`](store/legal/HOSTING.md); Phase 16 live probe: URL returns SPA shell, **not** policy HTML — still a blocker) |
@@ -143,9 +142,11 @@ Images/audio/video as first-class Workspace exporters are **not** full productio
 
 ### Marketplace & models
 
-- Purpose-organized marketplace + discovery filters (size, RAM, offline, license, sort)
-- Why-recommended explanations
+- **Get** tab marketplace with **All models** plus Small / Medium / Large size filters
+- Purpose chips (Recommended, Coding, Vision, …) — full size range where catalog allows
+- Why-recommended explanations; RAM over-budget is a warning (user may still download)
 - Install / pause / resume / cancel / retry downloads
+- Downloads over **Wi‑Fi or mobile data** by default (optional “Wi‑Fi only” in Settings)
 - SHA-256 verification when catalog provides a hash
 - Multi-model install, switch, update/reinstall with rollback backup, delete anytime
 - Optional catalog update checks in Settings
@@ -157,17 +158,22 @@ Images/audio/video as first-class Workspace exporters are **not** full productio
 
 ### Downloads, files, storage
 
-- Download Center (live / queue / paused / done / failed / history)
+- Download Center (reachable from **Mine** / Settings; not a primary tab)
 - Files explorer (categories, search, multi-select, share)
 - Generated content library + Workspace deep links
 - Storage manager + unused-model cleanup recommendations
 
 ### Settings, privacy, legal
 
-- Theme, performance mode, Wi‑Fi-only downloads, offline mode
+- Theme, performance mode, **optional** Wi‑Fi-only downloads, offline mode
 - Onboarding consent (Privacy, Terms, AI disclaimer)
 - In-app Privacy, Terms, FAQ, Copyright, licenses, model licenses, support, report issue
 - Analytics/crash toggles shown as **unavailable** (no SDK bundled)
+- Shortcuts to Workspace, Playground, and Downloads
+
+### Navigation (end-user)
+
+Primary tabs: **Home · Get · Chat · Mine · Settings**. Workspace / Downloads / Playground remain in the app via Settings (and deep links), not crowded into the tab bar.
 
 ### Branding & release packaging
 
@@ -200,10 +206,9 @@ Images/audio/video as first-class Workspace exporters are **not** full productio
 | --- | --- |
 | **llama.rn** | Native GGUF / llama.cpp inference (custom build) |
 | **expo-mlkit-ocr** | On-device OCR |
-| **expo-speech** | TTS |
+| **expo-speech** | On-device TTS |
 | **expo-speech-recognition** | STT |
 | **expo-image-picker** | Camera / library for Vision/OCR |
-| **expo-speech** | On-device TTS |
 | **expo-device** | Hardware profiling inputs |
 | **expo-network** | Connectivity for download policy |
 | **expo-file-system** | Model/document file I/O |
@@ -212,7 +217,7 @@ Images/audio/video as first-class Workspace exporters are **not** full productio
 | **expo-crypto** | IDs / hashing helpers |
 | **expo-constants / expo-linking / expo-font / expo-splash-screen / expo-status-bar** | App metadata, deep links, fonts, splash, status bar |
 | **expo-dev-client** | Custom development client |
-| **expo-build-properties** | minSdk 26, target/compile 35, largeHeap, iOS 16.4 |
+| **expo-build-properties** | minSdk 26, targetSdk 35, compileSdk 36, largeHeap, iOS 16.4 |
 
 ### Workspace exporters
 
@@ -247,14 +252,14 @@ Images/audio/video as first-class Workspace exporters are **not** full productio
 | **Git** | Clone repository |
 | **Java JDK** | Required for Android Gradle (Android Studio JDK is fine) |
 | **Android Studio** + SDK | Platforms, build-tools, platform-tools; emulator optional but recommended |
-| **Android SDK** | `minSdk 26`, `targetSdk 35` (configured in `app.json`) |
+| **Android SDK** | `minSdk 26`, `targetSdk 35`, `compileSdk 36` (configured in `app.json`) |
 | **Physical device or emulator** | Required for `expo run:android` and GGUF QA |
 
 ### Recommended for local inference QA
 
 - Mid-range Android phone, **6 GB+ RAM**
 - Free storage ≥ 2× largest model you will install
-- Wi‑Fi for first model download
+- Network (Wi‑Fi **or** mobile data) for first model download
 
 ### Expo Go vs native
 
@@ -600,9 +605,10 @@ There is **no** committed `expo-env.d.ts` required for day-to-day builds; Expo m
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│ Presentation                                                 │
-│  Home · Market · Workspace · Models · Downloads · Chat ·    │
-│  Play · Settings · Legal · OnboardingConsentGate            │
+│ Presentation (primary tabs)                                  │
+│  Home · Get (Marketplace) · Chat · Mine · Settings           │
+│  (+ Workspace / Downloads / Playground via Settings)         │
+│  Legal · OnboardingConsentGate                               │
 └───────────────────────────┬─────────────────────────────────┘
                             │
 ┌───────────────────────────▼─────────────────────────────────┐
@@ -643,8 +649,8 @@ There is **no** committed `expo-env.d.ts` required for day-to-day builds; Expo m
 
 ### Lifecycle
 
-1. User picks a task or browses Marketplace
-2. Consent must allow downloads; Wi‑Fi-only setting may block cellular
+1. User picks a task or opens **Get** (Marketplace)
+2. Consent must allow downloads; optional Wi‑Fi-only setting may block cellular (default: Wi‑Fi **or** mobile data)
 3. `DownloadManager` queues transfer (pause/resume/cancel/retry)
 4. Optional SHA-256 verification when catalog provides a hash
 5. `ModelManager` marks installed path + metadata
@@ -672,20 +678,18 @@ Install app
     ↓
 Splash → Onboarding consent (Privacy / Terms / AI disclaimer)
     ↓
-Home → choose a task
+Home → “Install your first model” (if none installed) or choose a task
     ↓
-Review recommended model (size, RAM, license, offline)
+Get tab → pick Small / Medium / Large (or Any size) → Download
     ↓
-Download & install
+Chat → ask anything (on-device after install)
     ↓
-Chat / Playground / Workspace generate
+Copy · Share · Save · Export (Workspace via Settings if needed)
     ↓
-Copy · Share · Save · Export
-    ↓
-(Optional) Delete model · Install another · Manage Storage
+(Optional) Mine → manage models · Downloads · Storage
 ```
 
-Minimum taps are optimized via Home task cards and `ModelRequiredGate` install CTAs.
+Minimum path: **Get → Download small model → Chat**.
 
 ---
 
@@ -814,11 +818,12 @@ Final Play report: [`release/FINAL_PLAYSTORE_REPORT.md`](release/FINAL_PLAYSTORE
 | Chat invents nothing / errors with installed model | Missing native runtime | Use custom build with `llama.rn` |
 | Expo Go “mock” banner | Expected | Not a bug — use native build for GGUF |
 | OCR/STT fails | Not linked / permission denied | Prebuild + grant mic/camera when prompted |
-| Downloads blocked | Consent / Wi‑Fi-only / offline mode | Settings → Privacy |
+| Downloads blocked | Consent / Wi‑Fi-only / offline mode | Settings: enable downloads; turn **off** “Wi‑Fi only downloads” to use mobile data; disable Offline mode |
 | `verify:release` fails on version | Docs out of sync | Update README, `LISTING.md`, `RELEASE_NOTES.md` to match `package.json` |
 | `expo-doctor` network error | Registry unreachable | Retry with network; not a code defect |
 | Release AAB rejected for signing | Debug keystore | Configure production signing ([`APP_SIGNING.md`](release/APP_SIGNING.md)) |
 | Privacy URL rejection | SPA / no policy text | Deploy `store/legal/*.html` at exact URLs (no analytics SPA shell) |
+| Sideload APK crashes / won’t install | Emulator-only (`x86_64`) build | Use **arm64-v8a** release APK for phones |
 
 ---
 
@@ -841,18 +846,18 @@ Final Play report: [`release/FINAL_PLAYSTORE_REPORT.md`](release/FINAL_PLAYSTORE
 15. **Is there telemetry?** No analytics SDK bundled.
 16. **Are there ads?** No ads SDK at launch.
 17. **How do updates for models work?** Optional catalog check + reinstall with rollback.
-18. **What is Wi‑Fi-only downloads?** Setting to avoid cellular model transfers.
+18. **What is Wi‑Fi-only downloads?** Optional Setting (default **off**). When on, model downloads require Wi‑Fi; when off, Wi‑Fi **or** mobile data works.
 19. **What is Offline mode in Settings?** Blocks network features when enabled.
 20. **How do I report a bug?** Settings → Report Issue (email compose).
 21. **Where is the Privacy Policy?** In-app Legal; web URL must be published for Play.
 22. **minSdk?** Android 8.0 (API 26).
-23. **targetSdk?** 35 (configured).
+23. **targetSdk?** 35. **compileSdk?** 36.
 24. **New Architecture?** Enabled in `app.json`.
 25. **Can I use ONNX today?** Adapter exists but reports unavailable.
 26. **Does `src/hooks` contain hooks?** Directory is reserved/empty; see `workspace/hooks`.
 27. **Is `android/` required in git?** No — regenerate with prebuild.
 28. **How do I regenerate icons?** Edit SVGs in `assets/brand/`, run `npm run export:brand`.
-29. **Why separate scores?** Phase 14 reports Repository **98%**, Production Validation **22%**, External **32%**, Play **38%** — so hardware/external gaps are not hidden in one number.
+29. **Why separate scores?** So external gaps aren’t hidden in one number. Current: Repository **100%** (project scope); Play still **NOT READY**. Phase 14’s older split scores remain historical in the Roadmap.
 30. **When can we submit to Play?** After blockers in `FINAL_RELEASE_CHECKLIST.md` are PASS.
 31. **Is iOS supported?** Prebuild/run supported; Android is primary Play target.
 32. **Does PocketBrain include RAG?** Not yet — roadmap only.
@@ -884,7 +889,7 @@ Honest list (also [`release/KNOWN_LIMITATIONS.md`](release/KNOWN_LIMITATIONS.md)
 6. Vision / image generation gated; video deferred
 7. Performance/TalkBack not hardware-verified
 8. English UI only (i18n scaffolding exists)
-9. Dense 8-tab navigation UX risk
+9. Primary navigation is 5 tabs (Home / Get / Chat / Mine / Settings); extra tools via Settings
 10. `expo-system-ui` recommended by prebuild for `userInterfaceStyle` (optional polish)
 11. RAG / plugins / agents / cloud sync / ads / subscriptions — future only
 
@@ -959,9 +964,12 @@ npm run lint && npm run test && npm run verify:release
 
 ## 25. Changelog
 
-### 1.9.3 — Phase 17
+### 1.9.3 — Phase 17 + local UX polish
 
 - Release engineer finalization: repo-controlled risk closure + handoff pack
+- End-user UX: 5 primary tabs; Home first-model CTA; simpler model cards; Chat empty CTAs
+- Downloads: Wi‑Fi **or** mobile data by default; Marketplace Small/Medium/Large + expanded catalog
+- Android `compileSdk` 36 (targetSdk remains 35); `expo-av` removed (mic via platform permissions)
 - Play still **NOT READY** (external)
 
 ### 1.9.2 — Phase 15
@@ -1106,13 +1114,12 @@ Phase 14 reports **four separate scores** (not one optimistic blend). Full detai
 
 | Score type | Value |
 | --- | ---: |
-| Repository Completion | **98%** |
-| Production Validation | **22%** |
-| External Readiness | **32%** |
-| Google Play Readiness | **38%** |
+| Repository Completion | **100%** (project scope) |
+| Production Validation | Awaiting external execution |
+| External Readiness | Legal hosting / signing / device QA / screenshots / Play |
+| Google Play Readiness | **NOT READY** |
 
 
 App version: **1.9.3** (Android `versionCode` 16).
 
-Devices tested: **none**. Signed production AAB: **not produced**. Do not report 100% until Critical blockers in [`release/FINAL_BLOCKERS.md`](release/FINAL_BLOCKERS.md) are cleared.
-# PocketBrain
+Devices tested: local emulator + sideload APK path used for development; formal RC matrix still open. Signed **Play** AAB: **not produced**. Do not claim Play readiness until Critical blockers in [`release/FINAL_BLOCKERS.md`](release/FINAL_BLOCKERS.md) / [`release/FINAL_RELEASE_CERTIFICATION.md`](release/FINAL_RELEASE_CERTIFICATION.md) are cleared.
