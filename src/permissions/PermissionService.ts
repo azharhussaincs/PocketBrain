@@ -1,9 +1,4 @@
-import { Alert, Linking, Platform } from 'react-native';
-import {
-  Audio,
-  InterruptionModeAndroid,
-  InterruptionModeIOS,
-} from 'expo-av';
+import { Alert, Linking, PermissionsAndroid, Platform } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { ExpoSpeechRecognitionModule } from 'expo-speech-recognition';
 
@@ -44,20 +39,22 @@ export class PermissionService {
   }
 
   private async requestMicrophone(): Promise<PermissionResult> {
-    await Audio.setAudioModeAsync({
-      allowsRecordingIOS: true,
-      playsInSilentModeIOS: true,
-      interruptionModeIOS: InterruptionModeIOS.DoNotMix,
-      interruptionModeAndroid: InterruptionModeAndroid.DoNotMix,
-      shouldDuckAndroid: true,
-      staysActiveInBackground: false,
-      playThroughEarpieceAndroid: false,
-    });
-    const result = await Audio.requestPermissionsAsync();
+    // Avoid expo-av: native lib UnsatisfiedLinkError with RN New Arch (x86_64 emulator).
+    if (Platform.OS === 'android') {
+      const granted = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
+      );
+      return {
+        kind: 'microphone',
+        granted: granted === PermissionsAndroid.RESULTS.GRANTED,
+        canAskAgain: granted !== PermissionsAndroid.RESULTS.NEVER_ASK_AGAIN,
+      };
+    }
+    const result = await ExpoSpeechRecognitionModule.requestPermissionsAsync();
     return {
       kind: 'microphone',
-      granted: result.granted,
-      canAskAgain: result.canAskAgain,
+      granted: result.granted === true,
+      canAskAgain: result.canAskAgain !== false,
     };
   }
 

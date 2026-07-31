@@ -203,7 +203,7 @@ Images/audio/video as first-class Workspace exporters are **not** full productio
 | **expo-speech** | TTS |
 | **expo-speech-recognition** | STT |
 | **expo-image-picker** | Camera / library for Vision/OCR |
-| **expo-av** | Audio session support |
+| **expo-speech** | On-device TTS |
 | **expo-device** | Hardware profiling inputs |
 | **expo-network** | Connectivity for download policy |
 | **expo-file-system** | Model/document file I/O |
@@ -270,7 +270,7 @@ Images/audio/video as first-class Workspace exporters are **not** full productio
 From scratch:
 
 ```bash
-git clone <YOUR_REPOSITORY_URL> PocketBrain
+git clone https://github.com/azharhussaincs/PocketBrain.git
 cd PocketBrain
 npm install
 ```

@@ -113,7 +113,7 @@ export const OPEN_SOURCE_LICENSES = `Major open-source components (non-exhaustiv
 • pdf-lib — MIT
 • pptxgenjs — MIT
 • SheetJS Community (xlsx) — Apache-2.0
-• expo-speech / expo-av / expo-file-system — MIT
+• expo-speech / expo-file-system — MIT
 • expo-speech-recognition — MIT
 • expo-mlkit-ocr — package license (ML Kit / Vision platform terms also apply)
 • llama.cpp / llama.rn (when linked) — MIT

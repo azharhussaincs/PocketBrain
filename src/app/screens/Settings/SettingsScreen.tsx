@@ -162,6 +162,11 @@ export function SettingsScreen({ navigation }: Props) {
         />
         <List.Item
           title="Wi-Fi only downloads"
+          description={
+            settings.wifiOnlyDownloads
+              ? 'On — downloads need Wi‑Fi'
+              : 'Off — Wi‑Fi or mobile data allowed'
+          }
           right={() => (
             <Switch
               value={settings.wifiOnlyDownloads}

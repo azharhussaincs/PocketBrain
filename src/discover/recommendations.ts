@@ -13,7 +13,12 @@ export type ModelBadge =
   | 'Recommended'
   | 'New'
   | 'Works Offline'
-  | 'System';
+  | 'System'
+  | 'Small'
+  | 'Medium'
+  | 'Large';
+
+export type ModelSizeTier = 'small' | 'medium' | 'large';
 
 export interface FriendlyModelCardData {
   id: string;
@@ -26,6 +31,7 @@ export interface FriendlyModelCardData {
   quality: 'Good' | 'Better' | 'Best';
   batteryImpact: 'Low' | 'Medium' | 'High';
   storageImpact: string;
+  sizeTier: ModelSizeTier;
   badges: ModelBadge[];
   technicalName: string;
   author: string;
@@ -35,6 +41,13 @@ export interface FriendlyModelCardData {
   installed: boolean;
   listing?: ModelListing;
   registered: RegisteredModel;
+}
+
+/** Size band for marketplace filters — based on download size. */
+export function sizeTierForBytes(downloadBytes: number): ModelSizeTier {
+  if (downloadBytes < 600_000_000) return 'small';
+  if (downloadBytes < 2_800_000_000) return 'medium';
+  return 'large';
 }
 
 function speedFor(listing?: ModelListing, registered?: RegisteredModel): FriendlyModelCardData['speed'] {
@@ -61,8 +74,12 @@ function badgesFor(
   listing: ModelListing | undefined,
   registered: RegisteredModel,
   recommended: boolean,
+  sizeTier: ModelSizeTier,
 ): ModelBadge[] {
   const badges: ModelBadge[] = [];
+  if (sizeTier === 'small') badges.push('Small');
+  else if (sizeTier === 'medium') badges.push('Medium');
+  else badges.push('Large');
   if (registered.runtime === 'system' || registered.runtime === 'mlkit') badges.push('System');
   if (recommended) badges.push('Recommended');
   if (listing?.isStarter || (listing?.requiredRamBytes ?? 0) < 500_000_000) {
@@ -88,6 +105,9 @@ export function toFriendlyCard(
   if (!registered) return null;
   const listing = getListingById(modelId);
   const speed = speedFor(listing, registered);
+  const sizeTier = sizeTierForBytes(
+    listing?.downloadSizeBytes ?? registered.storageSizeBytes,
+  );
   return {
     id: modelId,
     friendlyName: friendlyName(registered.name),
@@ -99,7 +119,8 @@ export function toFriendlyCard(
     quality: qualityFor(listing),
     batteryImpact: batteryFor(speed),
     storageImpact: formatBytes(registered.storageSizeBytes),
-    badges: badgesFor(listing, registered, Boolean(options?.recommended)),
+    sizeTier,
+    badges: badgesFor(listing, registered, Boolean(options?.recommended), sizeTier),
     technicalName: registered.name,
     author: registered.author,
     license: registered.license,
@@ -137,11 +158,14 @@ export function recommendationsForTask(task: AiTask): FriendlyModelCardData[] {
 }
 
 export type MarketplaceCollectionId =
+  | 'all'
   | 'popular'
   | 'recommended'
   | 'beginner'
   | 'fast'
   | 'small'
+  | 'medium'
+  | 'large'
   | 'quality'
   | 'offline'
   | 'coding'
@@ -152,29 +176,47 @@ export type MarketplaceCollectionId =
   | 'ocr'
   | 'embeddings';
 
-export function modelsInCollection(collection: MarketplaceCollectionId): FriendlyModelCardData[] {
-  const all = modelRegistry
+function allDownloadableCards(): FriendlyModelCardData[] {
+  return modelRegistry
     .listAll()
     .filter((m) => m.runtime !== 'system' && m.runtime !== 'mlkit')
     .map((m) => toFriendlyCard(m.id))
     .filter((c): c is FriendlyModelCardData => c != null);
+}
+
+/**
+ * Marketplace collections.
+ * Purpose chips (coding, vision, …) keep capability filter but include every size.
+ * Recommended / Popular / All show the full catalog (sorted by discovery).
+ */
+export function modelsInCollection(collection: MarketplaceCollectionId): FriendlyModelCardData[] {
+  const all = allDownloadableCards();
 
   switch (collection) {
+    case 'all':
     case 'popular':
     case 'recommended':
-      return all.filter((c) => c.badges.includes('Recommended') || c.listing?.isStarter);
+      return all;
     case 'beginner':
-      return all.filter((c) => c.badges.includes('Beginner Friendly'));
+      // Still show full catalog; discovery sorts beginner-friendly first.
+      return all;
     case 'fast':
-      return all.filter((c) => c.speed === 'Fast');
+      return all.filter((c) => c.speed === 'Fast' || c.sizeTier === 'small');
     case 'small':
-      return all.filter((c) => (c.listing?.requiredRamBytes ?? 0) < 1_000_000_000);
+      return all.filter((c) => c.sizeTier === 'small');
+    case 'medium':
+      return all.filter((c) => c.sizeTier === 'medium');
+    case 'large':
+      return all.filter((c) => c.sizeTier === 'large');
     case 'quality':
-      return all.filter((c) => c.quality === 'Better' || c.quality === 'Best');
+      return all.filter((c) => c.quality === 'Better' || c.quality === 'Best' || c.sizeTier !== 'small');
     case 'offline':
       return all.filter((c) => c.offline);
-    case 'coding':
-      return all.filter((c) => c.registered.capabilities.includes('coding'));
+    case 'coding': {
+      const coding = all.filter((c) => c.registered.capabilities.includes('coding'));
+      // If few coding-tagged models, still surface full catalog so users see size choices.
+      return coding.length > 0 ? coding : all;
+    }
     case 'vision':
       return all.filter((c) => c.registered.capabilities.includes('vision'));
     case 'speech':
@@ -184,8 +226,10 @@ export function modelsInCollection(collection: MarketplaceCollectionId): Friendl
         .filter((c): c is FriendlyModelCardData => c != null);
     case 'image':
       return all.filter((c) => c.registered.capabilities.includes('image_generation'));
-    case 'translation':
-      return all.filter((c) => c.registered.capabilities.includes('translation'));
+    case 'translation': {
+      const tr = all.filter((c) => c.registered.capabilities.includes('translation'));
+      return tr.length > 0 ? tr : all.filter((c) => c.listing?.tags.includes('multilingual') || c.registered.capabilities.includes('chat'));
+    }
     case 'ocr':
       return modelRegistry
         .listByCapability('ocr', false)

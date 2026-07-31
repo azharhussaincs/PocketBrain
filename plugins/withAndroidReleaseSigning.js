@@ -49,11 +49,11 @@ function injectReleaseSigning(gradle) {
     }`,
   );
 
+  // Assign release signing when creds exist. Do NOT throw inside buildTypes.release —
+  // that closure runs at configuration time and would break assembleDebug.
   const releaseSigningSnippet = `// ${MARKER}
             if (pbHasReleaseCreds) {
                 signingConfig signingConfigs.release
-            } else {
-                throw new GradleException("Release signing credentials missing. Set PB_UPLOAD_* env vars or android/keystore.properties. See release/APP_SIGNING.md")
             }`;
 
   // Replace release buildType debug signing assignment
@@ -83,6 +83,41 @@ function injectReleaseSigning(gradle) {
     next = lines.join('\n');
   }
 
+  // Fail-closed only when a release assemble/bundle/install task is actually requested.
+  // Credential locals are re-resolved here (project scope) — defs inside android {} are not visible.
+  const failClosedHook = `
+// ${MARKER} — fail-closed for release tasks only (debug builds must work without upload keystore)
+gradle.taskGraph.whenReady { graph ->
+    def pbReleaseRequested = graph.allTasks.any { t ->
+        def n = t.name.toLowerCase()
+        (n.contains("assemble") || n.contains("bundle") || n.contains("install")) && n.contains("release")
+    }
+    if (pbReleaseRequested) {
+        def pbKsFile = rootProject.file("keystore.properties")
+        def pbKs = new Properties()
+        if (pbKsFile.exists()) {
+            pbKs.load(new FileInputStream(pbKsFile))
+        }
+        def pbSf = System.getenv("PB_UPLOAD_STORE_FILE") ?: pbKs['storeFile']
+        def pbHasCreds = pbSf != null && !pbSf.toString().trim().isEmpty() &&
+            (System.getenv("PB_UPLOAD_STORE_PASSWORD") ?: pbKs['storePassword']) &&
+            (System.getenv("PB_UPLOAD_KEY_ALIAS") ?: pbKs['keyAlias']) &&
+            (System.getenv("PB_UPLOAD_KEY_PASSWORD") ?: pbKs['keyPassword'])
+        if (!pbHasCreds) {
+            throw new GradleException("Release signing credentials missing. Set PB_UPLOAD_* env vars or android/keystore.properties. See release/APP_SIGNING.md")
+        }
+    }
+}
+`;
+
+  if (!next.includes('pbReleaseRequested')) {
+    if (next.includes('dependencies {')) {
+      next = next.replace(/\ndependencies\s*\{/, `${failClosedHook}\ndependencies {`);
+    } else {
+      next = `${next}\n${failClosedHook}\n`;
+    }
+  }
+
   // Ensure release signingConfigs.release exists
   if (!/signingConfigs\s*\{[\s\S]*release\s*\{[\s\S]*pbHasReleaseCreds/.test(next)) {
     throw new Error('withAndroidReleaseSigning: signingConfigs.release block missing');
@@ -98,6 +133,9 @@ function injectReleaseSigning(gradle) {
   if (!releaseBody.includes('signingConfigs.release') && !releaseBody.includes(MARKER)) {
     throw new Error('withAndroidReleaseSigning: release buildType missing release signing wiring');
   }
+  if (!next.includes('pbReleaseRequested') || !next.includes('GradleException')) {
+    throw new Error('withAndroidReleaseSigning: release fail-closed taskGraph hook missing');
+  }
 
   return next;
 }
@@ -112,5 +150,5 @@ function withAndroidReleaseSigning(config) {
 module.exports = createRunOncePlugin(
   withAndroidReleaseSigning,
   'with-android-release-signing',
-  '1.0.2',
+  '1.0.3',
 );

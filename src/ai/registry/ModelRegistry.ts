@@ -180,6 +180,15 @@ export class ModelRegistry {
     const basic = canInstallModel(listing, hw);
     blockers.push(...basic.reasons);
 
+    if (
+      hw.totalRamBytes != null &&
+      listing.requiredRamBytes > hw.recommendedMaxModelRamBytes
+    ) {
+      warnings.push(
+        `This model prefers ~${Math.round((listing.requiredRamBytes / 1e9) * 10) / 10} GB RAM; your device budget is ~${Math.round((hw.recommendedMaxModelRamBytes / 1e9) * 10) / 10} GB. You can still download it — it may be slow or fail to load.`,
+      );
+    }
+
     if (hw.cpuArchitectures?.length && listing.architectures?.length) {
       const supported = hw.cpuArchitectures.some((arch) =>
         listing.architectures!.some((a) => arch.toLowerCase().includes(a.toLowerCase())),

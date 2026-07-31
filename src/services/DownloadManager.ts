@@ -41,7 +41,7 @@ async function assertNetworkAllowed(wifiOnly: boolean): Promise<void> {
   }
   if (wifiOnly && state.type !== Network.NetworkStateType.WIFI) {
     throw new Error(
-      'Wi‑Fi only downloads are enabled. Connect to Wi‑Fi or disable Wi‑Fi only in Settings → Privacy, then retry.',
+      'Wi‑Fi only downloads are enabled. Connect to Wi‑Fi, or turn off “Wi‑Fi only downloads” in Settings, then retry. Mobile data works when that switch is off.',
     );
   }
 }

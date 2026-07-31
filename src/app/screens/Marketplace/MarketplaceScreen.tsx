@@ -5,6 +5,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import {
   modelsInCollection,
   type MarketplaceCollectionId,
+  type ModelSizeTier,
 } from '../../../discover/recommendations';
 import {
   discoverModels,
@@ -25,28 +26,33 @@ import { LIST_PERF } from '../../../utils/listPerf';
 type Props = NativeStackScreenProps<MarketplaceStackParamList, 'MarketplaceHome'>;
 
 const COLLECTIONS: Array<{ id: MarketplaceCollectionId; label: string }> = [
+  { id: 'all', label: 'All models' },
   { id: 'recommended', label: 'Recommended' },
   { id: 'popular', label: 'Popular' },
   { id: 'beginner', label: 'Beginner' },
-  { id: 'fast', label: 'Fast' },
-  { id: 'small', label: 'Small' },
-  { id: 'quality', label: 'Best Quality' },
-  { id: 'offline', label: 'Offline Essentials' },
   { id: 'coding', label: 'Coding' },
   { id: 'vision', label: 'Vision (Limited)' },
   { id: 'speech', label: 'Speech' },
-  { id: 'image', label: 'Image Gen' },
   { id: 'translation', label: 'Translation' },
   { id: 'ocr', label: 'OCR' },
   { id: 'embeddings', label: 'Embeddings' },
+  { id: 'offline', label: 'Offline' },
+  { id: 'quality', label: 'Best quality' },
+  { id: 'image', label: 'Image Gen' },
+];
+
+const SIZE_FILTERS: Array<{ id: ModelSizeTier | 'all'; label: string }> = [
+  { id: 'all', label: 'Any size' },
+  { id: 'small', label: 'Small' },
+  { id: 'medium', label: 'Medium' },
+  { id: 'large', label: 'Large' },
 ];
 
 const SORTS: Array<{ id: DiscoverySort; label: string }> = [
-  { id: 'recommended', label: 'Why recommended' },
-  { id: 'size_asc', label: 'Smallest' },
+  { id: 'recommended', label: 'Best for you' },
+  { id: 'size_asc', label: 'Smallest first' },
+  { id: 'size_desc', label: 'Largest first' },
   { id: 'ram_asc', label: 'Lowest RAM' },
-  { id: 'author', label: 'Author' },
-  { id: 'license', label: 'License' },
 ];
 
 export function MarketplaceScreen({ navigation }: Props) {
@@ -55,11 +61,11 @@ export function MarketplaceScreen({ navigation }: Props) {
   const offlineMode = useSettingsStore((s) => s.offlineMode);
   const language = useSettingsStore((s) => s.language);
   const allowDownloads = useConsentStore((s) => s.allowModelDownloads);
-  const [collection, setCollection] = useState<MarketplaceCollectionId>('recommended');
+  const [collection, setCollection] = useState<MarketplaceCollectionId>('all');
+  const [sizeTier, setSizeTier] = useState<ModelSizeTier | 'all'>('all');
   const [query, setQuery] = useState('');
   const [busyId, setBusyId] = useState<string | null>(null);
-  const [fitsDevice, setFitsDevice] = useState(true);
-  const [offlineOnly, setOfflineOnly] = useState(false);
+  const [preferDeviceFit, setPreferDeviceFit] = useState(true);
   const [sort, setSort] = useState<DiscoverySort>('recommended');
 
   const data = useMemo(() => {
@@ -71,13 +77,13 @@ export function MarketplaceScreen({ navigation }: Props) {
       list,
       {
         query,
-        offlineOnly,
-        fitsDevice,
+        sizeTier,
+        fitsDevice: preferDeviceFit,
         sort,
       },
       hardware,
     );
-  }, [collection, query, offlineOnly, fitsDevice, sort, hardware]);
+  }, [collection, query, sizeTier, preferDeviceFit, sort, hardware]);
 
   const download = async (modelId: string) => {
     const card = data.find((d) => d.id === modelId);
@@ -92,14 +98,17 @@ export function MarketplaceScreen({ navigation }: Props) {
     }
     const report = await modelRegistry.checkCompatibility(modelId, hardware);
     if (!report.ok) {
-      Alert.alert('Not compatible', report.blockers.join('\n'));
+      Alert.alert('Cannot download', report.blockers.join('\n'));
       return;
     }
     const why = whyRecommended(card);
-    const warnings = report.warnings.length ? `\n\n${report.warnings.join('\n')}` : '';
+    const warnings = report.warnings.length ? `\n\nNote: ${report.warnings.join(' ')}` : '';
+    const netHint = wifiOnly
+      ? '\n\nWi‑Fi only is on (Settings). Turn it off to use mobile data.'
+      : '\n\nDownload uses Wi‑Fi or mobile data.';
     Alert.alert(
       'Download model',
-      `${card.friendlyName}\n${card.downloadSizeLabel} · RAM ${card.ramLabel}\nLicense: ${card.license}\nAuthor: ${card.author}\n\nWhy recommended: ${why}\n\nDownloads over the internet to this device only.${warnings}`,
+      `${card.friendlyName} · ${card.sizeTier.toUpperCase()}\n${card.downloadSizeLabel} · RAM ${card.ramLabel}\nLicense: ${card.license}\n\n${why}\n\nSaved on this phone only.${warnings}${netHint}`,
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -123,21 +132,59 @@ export function MarketplaceScreen({ navigation }: Props) {
     <View style={styles.container}>
       <Text variant="headlineSmall">{t('marketplace.title', language)}</Text>
       <Text variant="bodyMedium" style={styles.sub}>
-        {t('marketplace.subtitle', language)} Discover by task, size, RAM, license, and device fit.
+        Browse all models — Small, Medium, and Large. Pick what fits your phone storage and RAM.
+        Downloads work on Wi‑Fi or mobile data.
       </Text>
       <Searchbar
-        placeholder="Search by name, author, license, language…"
+        placeholder="Search models…"
         value={query}
         onChangeText={setQuery}
         style={styles.search}
         accessibilityLabel="Search marketplace models"
       />
+      <Text variant="labelLarge" style={styles.sectionLabel}>
+        Size
+      </Text>
+      <FlatList
+        horizontal
+        data={SIZE_FILTERS}
+        keyExtractor={(item) => item.id}
+        showsHorizontalScrollIndicator={false}
+        style={styles.chips}
+        renderItem={({ item }) => (
+          <Chip
+            selected={sizeTier === item.id}
+            onPress={() => setSizeTier(item.id)}
+            style={styles.chip}
+            compact
+          >
+            {item.label}
+          </Chip>
+        )}
+      />
+      <Text variant="labelLarge" style={styles.sectionLabel}>
+        Category
+      </Text>
+      <FlatList
+        horizontal
+        data={COLLECTIONS}
+        keyExtractor={(item) => item.id}
+        showsHorizontalScrollIndicator={false}
+        style={styles.chips}
+        renderItem={({ item }) => (
+          <Chip
+            selected={collection === item.id}
+            onPress={() => setCollection(item.id)}
+            style={styles.chip}
+            compact
+          >
+            {item.label}
+          </Chip>
+        )}
+      />
       <View style={styles.filterRow}>
-        <Chip selected={fitsDevice} onPress={() => setFitsDevice((v) => !v)} compact>
-          Fits this device
-        </Chip>
-        <Chip selected={offlineOnly} onPress={() => setOfflineOnly((v) => !v)} compact>
-          Offline
+        <Chip selected={preferDeviceFit} onPress={() => setPreferDeviceFit((v) => !v)} compact>
+          Prefer fits this phone
         </Chip>
       </View>
       <FlatList
@@ -157,39 +204,25 @@ export function MarketplaceScreen({ navigation }: Props) {
           </Chip>
         )}
       />
-      <FlatList
-        horizontal
-        data={COLLECTIONS}
-        keyExtractor={(item) => item.id}
-        showsHorizontalScrollIndicator={false}
-        style={styles.chips}
-        renderItem={({ item }) => (
-          <Chip
-            selected={collection === item.id}
-            onPress={() => setCollection(item.id)}
-            style={styles.chip}
-            compact
-          >
-            {item.label}
-          </Chip>
-        )}
-      />
+      <Text variant="labelMedium" style={styles.count}>
+        {data.length} model{data.length === 1 ? '' : 's'}
+      </Text>
       <FlatList
         {...LIST_PERF}
         data={data}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.list}
-        initialNumToRender={6}
+        initialNumToRender={8}
         ListEmptyComponent={
           <EmptyState
             title="No matching models"
-            description="Try clearing filters or searching by name, author, or license."
+            description="Try Size → Any size, or Category → All models."
           />
         }
         renderItem={({ item }) => (
           <View>
             <Text variant="labelSmall" style={styles.why}>
-              {whyRecommended(item)}
+              {item.sizeTier.toUpperCase()} · {whyRecommended(item)}
             </Text>
             <FriendlyModelCard
               model={item}
@@ -218,10 +251,11 @@ const styles = StyleSheet.create({
   container: { flex: 1, paddingHorizontal: 16, paddingTop: 8 },
   sub: { opacity: 0.75, marginBottom: 10 },
   search: { marginBottom: 8 },
+  sectionLabel: { marginBottom: 4, opacity: 0.85 },
   filterRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 8 },
   chips: { maxHeight: 44, marginBottom: 8 },
   chip: { marginRight: 6 },
+  count: { opacity: 0.65, marginBottom: 6 },
   why: { opacity: 0.7, marginBottom: 4 },
   list: { paddingBottom: 32 },
-  empty: { textAlign: 'center', marginTop: 48, opacity: 0.7 },
 });

@@ -27,7 +27,8 @@ if (androidProps.minSdkVersion === 26) r.pass('minSdk', '26');
 else r.fail('minSdk', String(androidProps.minSdkVersion));
 if (androidProps.targetSdkVersion === 35) r.pass('targetSdk', '35');
 else r.fail('targetSdk', String(androidProps.targetSdkVersion));
-if (androidProps.compileSdkVersion === 35) r.pass('compileSdk', '35');
+if (androidProps.compileSdkVersion === 36) r.pass('compileSdk', '36');
+else if (androidProps.compileSdkVersion === 35) r.warn('compileSdk', '35 (prefer 36 for current AndroidX AAR metadata)');
 else r.warn('compileSdk', String(androidProps.compileSdkVersion));
 
 const perms = app.expo?.android?.permissions ?? [];

@@ -19,6 +19,15 @@ export const useSettingsStore = create<SettingsState>()(
     }),
     {
       name: '@pocketbrain/settings',
+      version: 2,
+      migrate: (persistedState, fromVersion) => {
+        const state = (persistedState ?? {}) as Partial<AppSettings>;
+        // v2: allow Wi‑Fi or mobile data by default (was Wi‑Fi-only).
+        if (fromVersion < 2) {
+          return { ...state, wifiOnlyDownloads: false };
+        }
+        return state;
+      },
       storage: createJSONStorage(() => AsyncStorage),
       onRehydrateStorage: () => () => {
         useSettingsStore.setState({ hydrated: true });

@@ -64,7 +64,7 @@
           "android": {
             "minSdkVersion": 26,
             "targetSdkVersion": 35,
-            "compileSdkVersion": 35,
+            "compileSdkVersion": 36,
             "largeHeap": true
           },
           "ios": {
@@ -92,7 +92,6 @@
           "iosEngine": "auto"
         }
       ],
-      "expo-av",
       [
         "llama.rn",
         {

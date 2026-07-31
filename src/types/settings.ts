@@ -18,7 +18,7 @@ export interface AppSettings {
 export const DEFAULT_SETTINGS: AppSettings = {
   language: 'en',
   theme: 'system',
-  wifiOnlyDownloads: true,
+  wifiOnlyDownloads: false,
   cpuThreads: 4,
   gpuEnabled: true,
   memoryLimitMb: 4096,

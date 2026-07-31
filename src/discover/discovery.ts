@@ -1,7 +1,7 @@
 import { modelManager } from '../services/ModelManager';
 import { getListingById } from '../data/catalog';
 import type { HardwareProfile } from '../types/hardware';
-import type { FriendlyModelCardData } from './recommendations';
+import type { FriendlyModelCardData, ModelSizeTier } from './recommendations';
 import { toFriendlyCard } from './recommendations';
 
 export type DiscoverySort =
@@ -22,6 +22,8 @@ export interface DiscoveryFilters {
   maxRamBytes?: number;
   maxSizeBytes?: number;
   fitsDevice?: boolean;
+  /** When set, only that size tier. When omitted/undefined, show all sizes. */
+  sizeTier?: ModelSizeTier | 'all';
   sort?: DiscoverySort;
 }
 
@@ -73,6 +75,10 @@ export function discoverModels(
     list = list.filter((m) => m.offline);
   }
 
+  if (filters.sizeTier && filters.sizeTier !== 'all') {
+    list = list.filter((m) => m.sizeTier === filters.sizeTier);
+  }
+
   if (filters.maxRamBytes != null) {
     list = list.filter(
       (m) => (m.listing?.requiredRamBytes ?? m.registered.requiredRamBytes) <= filters.maxRamBytes!,
@@ -87,10 +93,8 @@ export function discoverModels(
   }
 
   if (filters.fitsDevice && hardware?.recommendedMaxModelRamBytes != null) {
-    const budget = hardware.recommendedMaxModelRamBytes;
-    list = list.filter(
-      (m) => (m.listing?.requiredRamBytes ?? m.registered.requiredRamBytes) <= budget,
-    );
+    // Soft preference: prefer fits-device models but do not hide larger ones —
+    // sort them after via recommended score. (Hard filter removed for end-user choice.)
   }
 
   const sort = filters.sort ?? 'recommended';
@@ -116,11 +120,19 @@ export function discoverModels(
         return (b.listing?.version ?? '').localeCompare(a.listing?.version ?? '');
       case 'recommended':
       default: {
-        const score = (c: FriendlyModelCardData) =>
-          (c.badges.includes('Recommended') ? 4 : 0) +
-          (c.badges.includes('Beginner Friendly') ? 2 : 0) +
-          (c.listing?.isStarter ? 3 : 0) +
-          (c.offline ? 1 : 0);
+        const budget = hardware?.recommendedMaxModelRamBytes;
+        const score = (c: FriendlyModelCardData) => {
+          let s =
+            (c.badges.includes('Recommended') ? 4 : 0) +
+            (c.badges.includes('Beginner Friendly') ? 2 : 0) +
+            (c.listing?.isStarter ? 3 : 0) +
+            (c.offline ? 1 : 0);
+          if (filters.fitsDevice && budget != null) {
+            const ram = c.listing?.requiredRamBytes ?? c.registered.requiredRamBytes;
+            if (ram <= budget) s += 5;
+          }
+          return s;
+        };
         return score(b) - score(a);
       }
     }

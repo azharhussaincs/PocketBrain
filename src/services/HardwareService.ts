@@ -80,20 +80,14 @@ export function canInstallModel(
     reasons.push(`Not supported on ${hardware.platform}`);
   }
 
-  if (
-    hardware.totalRamBytes != null &&
-    model.requiredRamBytes > hardware.recommendedMaxModelRamBytes
-  ) {
-    reasons.push(
-      `Needs ~${Math.round(model.requiredRamBytes / 1e9 * 10) / 10} GB RAM; device budget is ~${Math.round(hardware.recommendedMaxModelRamBytes / 1e9 * 10) / 10} GB`,
-    );
-  }
+  // RAM over budget is advisory only — users may still download larger models.
+  // Storage shortfall remains a hard blocker.
 
   if (
     hardware.freeStorageBytes != null &&
     model.requiredStorageBytes > hardware.freeStorageBytes
   ) {
-    reasons.push('Insufficient free storage');
+    reasons.push('Insufficient free storage for this download');
   }
 
   return { ok: reasons.length === 0, reasons };
